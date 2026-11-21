@@ -1,0 +1,52 @@
+# TheTowers - custom rewards
+# Reload with /tt reload after editing this file.
+#
+# Each event section may carry two direct fields (handled in-process, so the
+# exact amount granted is echoed back to the player in chat with its reason):
+#   exp:   "MIN-MAX" (a random amount in [min,max]) or "N" (fixed).
+#          EXP is ADDED for winner/draw/point/on-kill, and DEDUCTED for
+#          on-death (and loser if you uncomment it). EXP deductions never
+#          de-level the player.
+#   coins: "MIN-MAX" or "N". Coins are ALWAYS ADDED, NEVER deducted, on every
+#          event that lists them (on-death and loser have no coins field).
+#
+# The chat feedback (configurable in messages.yml):
+#   &3+45 exp &7(Player killed)     &c-30 exp &7(You died)
+#   &6+125 coins &7(Game Win)
+# Reasons: (Player killed), (Score), (Game Win), (You died),
+#          (Game Loss) [if loser exp set], (Game Draw).
+#
+# Optionally, a legacy commands: list may still be added to any section: each
+# line is run by the server console (in addition to exp/coins). Placeholders:
+#   %player% %arena% %team% %winner% %killer% %victim% %score% %goal%
+#   %random:MIN-MAX%  (a random whole number in [MIN, MAX], rolled per line).
+#
+# Coin income tuning (per game, rough): on-kill 5-15, point 15-30,
+# winner 100-200. A strong game is ~300 coins; the late kits (kits.yml)
+# cost 1800-8000, so they take several days of play to afford.
+
+# ================= End-of-game rewards =================
+winner:
+  exp: "50-100"
+  coins: "100-200"
+
+# Losers only ever lose EXP (optional). No coins. Uncomment to deduct.
+loser:
+  # exp: "25-50"
+
+draw:
+  exp: "30"
+  coins: "50"
+
+# ================= Per-point rewards =================
+point:
+  exp: "25-50"
+  coins: "15-30"
+
+# ================= Kill / death rewards =================
+on-kill:
+  exp: "3-5"
+  coins: "5-15"
+
+on-death:
+  exp: "1-3"   # deducted; coins are never deducted on death

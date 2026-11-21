@@ -1,0 +1,218 @@
+# ==========================================================
+#  TheTowers - menus configuration
+# ==========================================================
+# Every inventory menu of the plugin is configured here EXCEPT the
+# kit selection menu (kits.yml keeps its own contents/lore).
+# Each menu is its own section below: team selection, stats,
+# spectator players, the admin setup menu and the lobby hotbar
+# items' display names.
+#
+# Edit this file and run /tt reload to apply. & color codes and
+# %name% variables are replaced when the menu is opened.
+
+# ==========================================================
+#  Team selection menu
+# ==========================================================
+# Opened by the wool block of the waiting lobby. Each team is one
+# wool block in its own color, with its players listed underneath.
+team-menu:
+  title: "&8Choose your team &7(%arena%)"
+  players-line: "&7Players: &f%current%&7/&f%max%"
+  empty-line: "%color%Nobody yet"
+  member-line: "%color% %color%%player%"
+  member-you-line: "%color% %color%%player% &e(you)"
+  status-chosen: "&a- Your team"
+  status-full: "&c- Full"
+  status-click: "&e- Click to join"
+
+# ==========================================================
+#  Stats menu (/tt stats [player])
+# ==========================================================
+# Opened by /tt stats. Each stat is one item; the player's value
+# replaces %value%. The target player's name replaces %name% in
+# the title. Set an item's slot to -1 to hide it.
+#
+# Each item accepts:
+#   material : modern or pre-1.13 name (IRON_SWORD, PAPER...)
+#   slot     : 0 to (size-1)
+#   name     : display name (& colors, %value%)
+#   lore     : list of lore lines (& colors, %value%)
+#
+# Available stat ids (use them as the item key):
+#   games, wins, losses, kills, deaths, points, kd,
+#   blocks_placed, blocks_broken, max_kill_streak,
+#   damage_dealt, damage_taken, coins
+stats-menu:
+  title: "&8Stats of &f%name%"
+  size: 36
+  items:
+    games:
+      material: PAPER
+      slot: 10
+      name: "&aGames: &f%value%"
+      lore:
+        - "&7Total games played"
+    wins:
+      material: GOLD_INGOT
+      slot: 11
+      name: "&aWins: &f%value%"
+      lore:
+        - "&7Games won"
+    losses:
+      material: IRON_INGOT
+      slot: 12
+      name: "&cLosses: &f%value%"
+      lore:
+        - "&7Games lost"
+    kills:
+      material: IRON_SWORD
+      slot: 13
+      name: "&aKills: &f%value%"
+      lore:
+        - "&7Total enemies killed"
+    deaths:
+      material: SKULL_ITEM
+      slot: 14
+      name: "&cDeaths: &f%value%"
+      lore:
+        - "&7Times you died"
+    points:
+      material: EMERALD
+      slot: 15
+      name: "&aPoints: &f%value%"
+      lore:
+        - "&7Points scored in enemy pools"
+    kd:
+      material: DIAMOND_SWORD
+      slot: 16
+      name: "&aK/D: &f%value%"
+      lore:
+        - "&7Kill/death ratio"
+    blocks_placed:
+      material: BRICK
+      slot: 19
+      name: "&aBlocks placed: &f%value%"
+      lore:
+        - "&7Blocks placed during games"
+    blocks_broken:
+      material: IRON_PICKAXE
+      slot: 20
+      name: "&aBlocks broken: &f%value%"
+      lore:
+        - "&7Blocks mined during games"
+    max_kill_streak:
+      material: BLAZE_ROD
+      slot: 21
+      name: "&aBest kill streak: &f%value%"
+      lore:
+        - "&7Your highest kill streak"
+    damage_dealt:
+      material: GOLD_SWORD
+      slot: 22
+      name: "&aDamage dealt: &f%value%"
+      lore:
+        - "&7Total damage dealt (hearts)"
+    damage_taken:
+      material: REDSTONE
+      slot: 23
+      name: "&cDamage taken: &f%value%"
+      lore:
+        - "&7Total damage received (hearts)"
+    coins:
+      material: GOLD_NUGGET
+      slot: 25
+      name: "&6Coins: &f%value%"
+      lore:
+        - "&7Your coin balance"
+
+# ==========================================================
+#  Spectator "players" menu
+# ==========================================================
+# Opened by the eye of ender while spectating: one head per
+# participant, click to teleport to them.
+spectator-menu:
+  title: "&8Players"
+  lore: "&7Click to teleport to them"
+
+# ==========================================================
+#  Admin setup menu (/tt or /tt edit)
+# ==========================================================
+# The arena configuration menu: list, edit, team settings,
+# generators, delete confirmation.
+config-menu:
+  title.list: "&8TheTowers arenas"
+  title.edit: "&8Setup"
+  title.team: "&8Team settings"
+  title.generators: "&8Generators"
+  title.delete: "&8Delete the arena"
+  list.state: "&7State: &f%state%"
+  list.players: "&7Players: &f%current%/%max%"
+  list.ready: "&aReady to play"
+  list.incomplete: "&cIncomplete: %problem%"
+  list.click_edit: "&eClick to edit"
+  list.create_name: "&aCreate an arena"
+  list.create_lore: "&eClick to create an arena"
+  edit.back: "&eBack to the list"
+  edit.back_arena: "&eBack to the arena"
+  edit.info_name: "&6Arena: &f%arena%"
+  edit.info_ready: "&aReady to play"
+  edit.info_incomplete: "&cIncomplete: %problem%"
+  edit.plus_minus: "&aLeft click +1 &7| &cRight click -1"
+  edit.teamcount_name: "&aNumber of teams: &f%value%"
+  edit.perteam_name: "&aPlayers per team: &f%value%"
+  edit.min_name: "&aMinimum players: &f%value%"
+  edit.max_name: "&aMaximum players: &f%value%"
+  edit.points_name: "&aPoints to win: &f%value%"
+  edit.duration_name: "&aMaximum duration: &f%value% min"
+  edit.duration_lore: "&aLeft click +5 min &7| &cRight click -5 min"
+  edit.bows_name: "&aBows: %state%"
+  edit.spectators_name: "&aSpectators: %state%"
+  edit.spectators_lore: "&7Allows /tt spectate during the game"
+  edit.toggle_click: "&eClick to toggle"
+  edit.set: "&aSet"
+  edit.unset: "&cNot set"
+  edit.place_click: "&eClick: set in placement mode"
+  edit.open_click: "&eClick to open"
+  edit.lobby_name: "&aWaiting lobby"
+  edit.generators_name: "&aGenerators: &f%count%"
+  edit.regen_name: "&aMap regeneration: %state%"
+  edit.regen_lore: "&7Server-wide setting"
+  edit.team_name: "Team %team%"
+  edit.team_click: "&eClick to set up"
+  edit.team_inactive: "&8Team not used by this format"
+  edit.save_name: "&aSave / Check"
+  edit.delete_name: "&cDelete the arena"
+  state.on: "&ayes"
+  state.off: "&cno"
+  status.ok: "&a+ %what%"
+  status.missing: "&c- %what%"
+  team.back: "&eBack to the arena"
+  team.spawn_short: "Spawn point"
+  team.pool_short: "Pool"
+  team.spawn_zone_short: "Protected zone"
+  team.chest_zone_short: "Chest zone"
+  team.spawn_name: "&aSpawn point"
+  team.pool_name: "&bPool &7(required)"
+  team.pool_hint: "&7Entering it makes the enemy team score."
+  team.spawn_zone_name: "&aProtected zone &7(optional)"
+  team.spawn_zone_hint: "&7Nobody can place or break blocks here."
+  team.chest_zone_name: "&aChest zone &7(optional)"
+  team.chest_zone_hint: "&7Only this team can open chests here."
+  team.zone_click: "&eLeft click: set (2 corners)"
+  team.zone_clear_click: "&cRight click: clear"
+  generators.info: "&7Types are set in config.yml"
+  generators.clear_all: "&cRemove all generators"
+  generators.type_name: "&6Generator: &f%type%"
+  generators.count: "&7Placed in the arena: &f%count%"
+  generators.interval: "&7One item every &f%seconds%&7 s"
+  generators.add: "&aLeft click: add (placement mode)"
+  generators.clear: "&cRight click: remove this type"
+  delete.info_name: "&cDelete %arena%?"
+  delete.info_lore: "&7This cannot be undone."
+  delete.confirm: "&aConfirm deletion"
+  delete.cancel: "&cCancel"
+
+# Lobby hotbar items (arena + main lobby) and spectator hotbar item display
+# names live in lobby-items.yml now (materials, slots, names, lore and the
+# main-lobby custom command items).
+

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.thetowers</groupId>
+    <artifactId>TheTowers</artifactId>
+    <version>1.9.10</version>
+    <packaging>jar</packaging>
+
+    <name>TheTowers</name>
+    <description>The Towers minigame for Minecraft 1.12.2 (multi-arena, cross-version clients via ViaVersion).</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--
+            Java 8 bytecode (version 52), so the jar runs on every JVM a
+            1.12.2 server is likely to use, from Java 8 upward. We use
+            source/target instead of the release flag because some stripped
+            JDK builds (Debian openjdk 21 jre headless) ship the compiler
+            module without the release data files. Consequence: no var,
+            records, text blocks, switch expressions or any post Java 8
+            syntax.
+        -->
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+        <!-- VaultAPI (kit purchases with Vault money). Provided by the server
+             like spigot-api: never bundled in the jar. -->
+        <repository>
+            <id>jitpack</id>
+            <url>https://jitpack.io/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!--
+            Compiled against the 1.12.2 API, the ONLY supported server version.
+            scope provided = supplied by the server, never bundled in the jar.
+        -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.12.2-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            XSeries: cross-CLIENT-VERSION item/sound/enchantment resolution.
+            The server is 1.12.2 only, but clients of many versions connect
+            through ViaVersion / ViaBackwards / ViaRewind. XMaterial maps config
+            names (and data values like WOOL:14) to the correct 1.12.2 item,
+            which Via then translates to every client protocol - so menu items
+            look right for 1.8.9 and 1.20 clients alike. Bundled in the jar and
+            relocated below to avoid conflicts with other plugins shading it.
+        -->
+        <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+            <version>9.10.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--
+            Bundled MySQL/MariaDB driver for the stats storage. Deliberately
+            2.7.x: Java 8 bytecode. Loaded only when storage.type = mysql.
+        -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>2.7.12</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--
+            PlaceholderAPI: only to compile the %thetowers_...% expansion. Never
+            bundled; the expansion is loaded only if PlaceholderAPI is present.
+        -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.6</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            Vault: only to compile EconomyHook (kit purchases). Never bundled
+            (provided); the hook is used only if the Vault plugin and an economy
+            provider are on the server.
+        -->
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7.1</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bukkit</groupId>
+                    <artifactId>bukkit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <defaultGoal>clean package</defaultGoal>
+        <finalName>${project.name}-${project.version}</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <!-- lets plugin.yml carry ${project.version} -->
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <compilerArgs>
+                        <arg>-Xlint:-options</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <!--
+                                minimizeJar stays false on purpose: XSeries
+                                resolves some of its classes dynamically and the
+                                minimizer would remove them.
+                            -->
+                            <minimizeJar>false</minimizeJar>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.cryptomorin.xseries</pattern>
+                                    <shadedPattern>com.thetowers.libs.xseries</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.mariadb.jdbc</pattern>
+                                    <shadedPattern>com.thetowers.libs.mariadb</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <!--
+                                Rewrites the META-INF/services files of the
+                                driver to the relocated package, otherwise the
+                                driver cannot find its own components.
+                            -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>module-info.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

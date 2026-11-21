@@ -1,0 +1,148 @@
+# =============================================================================
+# parties.yml - TheTowers party system
+# =============================================================================
+# EVERYTHING related to parties lives in this single file: just the settings
+# and the messages. Parties are NOT saved anywhere: if the server restarts,
+# every party is wiped (memory only). Edit this file freely, then run
+# /party reload (or /tt reload) to apply the changes.
+#
+# Color codes use the '&' prefix (e.g. &a green, &c red, &l bold). Every
+# message accepts variables written as %name% (see the comment above each key).
+
+settings:
+  # Maximum number of players a party can hold, leader included.
+  #
+  # IMPORTANT - size vs. team capacity: the whole party is ALWAYS placed on the
+  # SAME team when the leader joins a game, so a party larger than playersPerTeam
+  # (/tt setplayersperteam, default 4) can never be placed together: no arena
+  # will fit them on one team and the leader gets the "no-fit" message
+  # (join-no-fit below). Keep max-size <= playersPerTeam. Default 4.
+  max-size: 4
+
+  # Seconds a player who REJECTED an invite is protected: during this window
+  # the SAME inviter cannot invite them again. 300 = 5 minutes. Memory only.
+  invite-cooldown-seconds: 300
+
+  # Seconds an outgoing invite stays valid before it expires silently and the
+  # target can no longer /party accept it.
+  invite-expire-seconds: 60
+
+# -----------------------------------------------------------------------------
+# Messages. Each key is read from this file (server copy wins, the bundled
+# copy is the fallback for keys added by an update).
+# -----------------------------------------------------------------------------
+messages:
+  # Prepended to almost every party message.
+  prefix: "&8[&bParty&8]&r "
+
+  # Sent to the console / a sender that must be a player.
+  ingame-only: "&cThis command can only be run in game by a player."
+  no-permission: "&cYou do not have permission to use this command."
+  unknown-subcommand: "&cUnknown party subcommand. &7Type &f/party help&7."
+  player-not-found: "&cThat player is not online."
+  player-not-specified: "&cUsage: &f/party %sub% <player>&c."
+
+  # ----- help -----
+  help:
+    - "&8&m------------&r &b&lParty &7help &8&m------------"
+    - "&b/party invite <player> &7- Invite a player to your party."
+    - "&b/party accept <player> &7- Accept a player's invite."
+    - "&b/party deny <player>   &7- Deny a player's invite."
+    - "&b/party list            &7- Show your party's members."
+    - "&b/party chat            &7- Toggle party chat on/off."
+    - "&b/party promote <player>&7- Hand the leadership to a member."
+    - "&b/party kick <player>   &7- Leader only: remove a member."
+    - "&b/party leave           &7- Leave your current party."
+    - "&b/party disband         &7- Leader only: dissolve the party."
+    - "&b/party reload          &7- Admin: reload parties.yml."
+
+  # ----- party state -----
+  not-in-party: "&7You are not in a party."
+  already-in-party: "&7You are already in a party. Leave or disband first."
+  not-leader: "&7Only the party leader can do that."
+  party-full: "&7The party is full (&f%max%&7/&f%max%&7)."
+  already-member: "&7%player% is already in your party."
+  target-in-party: "&7%player% is already in another party."
+
+  # ----- invite -----
+  # Sent to the inviter.
+  invite-sent: "&7Invite sent to &f%player%&7."
+  # Sent to the inviter when their invite is blocked by a recent reject.
+  invite-cooldown: "&7%player% recently rejected your invite. Wait &f%seconds%s &7before trying again."
+  # Sent to the target (a chat message before the clickable buttons).
+  invite-received: "&b%player% &7has invited you to their party. You have &f%seconds%s &7to respond."
+
+  # ----- accept / deny -----
+  invite-expired: "&7That invite has expired or no longer exists."
+  no-invite-from: "&7You have no pending invite from &f%player%&7."
+  accept-success: "&7You joined &f%player%&7's party."
+  accept-broadcast: "&b&l%player% &7joined the party."
+  deny-success: "&7You rejected &f%player%&7's party invite."
+  deny-broadcast: "&7%player%'s invite was rejected."
+
+  # ----- chat -----
+  chat-on: "&7Party chat &aON&7: your messages now go only to your party."
+  chat-off: "&7Party chat &cOFF&7: your messages are back to normal."
+  # The tag shown in front of the sender's name when they are the party leader.
+  # %leader% in chat-format is replaced with this (already color-coded) when the
+  # sender leads the party, and with nothing when they do not.
+  chat-leader-tag: "&c[Leader]&r "
+  # The party chat line shown to every member.
+  # %leader% = the leader tag above (only for the leader), %player% = sender,
+  # %message% = text.
+  chat-format: "&8[&bParty&8]&r %leader%%player%&8: &f%message%"
+
+  # ----- list -----
+  list-header: "&8&m----&r &b&lYour Party &7(&f%size%&7/&f%max%&8) &8&m----"
+  list-leader: "&b\u2756 &f%player% &a&lLEADER"
+  list-member: "&7\u2756 &f%player%"
+  list-empty: "&7Your party is empty."
+
+  # ----- promote / kick / leave / disband -----
+  promote-success: "&7The leadership has been handed to &f%player%&7."
+  promote-not-member: "&7%player% is not in your party."
+  promote-already-leader: "&7%player% is already the leader."
+  kick-success: "&7You kicked &f%player% &7from the party."
+  kick-broadcast: "&7%player% was kicked from the party."
+  leave-success: "&7You left the party."
+  leave-broadcast: "&7%player% left the party."
+  disband-broadcast: "&cThe party has been disbanded."
+  # Sent to the last remaining member when a party shrinks to a single player
+  # (someone left, was kicked, or quit): a party needs at least 2, so it is
+  # disbanded automatically.
+  disband-too-small: "&cThe party was disbanded: at least 2 players are needed."
+  # A member who disconnects is KEPT in the party (a reconnect restores them);
+  # these just announce the offline/online change to the others (and to the
+  # player who rejoined).
+  disconnect-notice: "&7%player% went offline (still in the party)."
+  reconnect-notice: "&7%player% reconnected."
+  reconnect-self: "&7You are back in your party."
+  # Sent to a member when they are removed because the party was disbanded.
+  removed-notify: "&7Your party was disbanded by the leader."
+
+  # ----- join gate (Arena.join) -----
+  # Shown to a party member (not the leader) who tries to join a game on their
+  # own, by any path (/tt join, /tt randomjoin, a join sign, the lobby plate).
+  join-blocked-non-leader: "&cOnly the leader can join a new game!"
+  # Shown to a party member who could not follow the leader into the arena
+  # (the arena/team filled up before they were moved in).
+  join-follow-failed: "&7Could not follow your leader into &f%arena%&7: %reason%."
+  # Shown to the leader when NO joinable arena can fit the whole party on the
+  # same team (the party is never split).
+  join-no-fit: "&cNo arena can fit your whole party on the same team right now. Try again later."
+  # Shown to the leader when the arena they asked for (/tt join X, a sign) could
+  # not fit the party and they were moved to another arena that does.
+  join-moved: "&7Arena &f%chosen% &7could not fit your party: moved to &f%arena%&7."
+
+  # ----- team control (party in a game lobby) -----
+  # Shown to a party member (not the leader) who picks a team in the waiting
+  # lobby's wool menu: only the leader chooses the team for the whole party.
+  team-change-blocked-member: "&cOnly your party leader can change the team."
+  # Shown to the leader when the team they picked cannot fit the whole party on
+  # the same team (the party is never split). %team% = team name, %size% = party
+  # size that must fit.
+  team-change-full: "&c%team% can't fit your whole party (%size% players). Pick another team."
+
+# Permissions (referenced here for documentation; the real nodes are in plugin.yml)
+#   thetowers.party.use   - default true - use /party (invite, accept, chat, ...)
+#   thetowers.party.reload - default op - /party reload

@@ -1,0 +1,404 @@
+# ==========================================================
+#  TheTowers - kits (21 total, 3 rows of 7)
+# ==========================================================
+# Each player chooses their kit with the "Kits" item (the sword) of the
+# waiting lobby, or with /tt kit ANYWHERE (main lobby included):
+#   /tt kit            -> the selection menu
+#   /tt kit <kit>      -> selects a kit by id (ex. /tt kit archer)
+#   /tt kit buy <kit>  -> pays a priced kit with coins (Vault)
+# The chosen kit is given at game start and on every respawn, in addition to
+# the team's leather armor (config.yml, kit.team-armor). The choice is
+# remembered from one game to the next (saved in stats.yml).
+#
+# A kit REVEALS (its real icon/name show in the menu) only when ALL of its
+# requirements are met - INCLUDING the coin cost. Until then it shows as a red
+# glass pane named "???" with only the requirements listed. A revealed kit is
+# only ever SELECTED (free): the coin cost is paid ONCE, the first time the
+# player buys it, never again.
+#
+# Requirements, all optional and combinable. The cost is always charged LAST:
+# the player must first meet the stats (if any) and the level (if any), and
+# only then - if they have the money - can they buy the kit:
+#   requires    : { stat: N, ... } STATS ONLY (games, wins, losses, kills,
+#                 deaths, points), ALL must be reached. NOT for coins.
+#                 Example: requires: { wins: 3 }
+#   level       : (optional) TheTowers level to reach. Checked natively -
+#                 no PlaceholderAPI needed. 0/absent = no level gate.
+#   cost        : (optional, canonical) coin cost of the kit, a top-level
+#                 field parallel to `level`. Paid ONCE, the first time the
+#                 player buys the kit (after stats + level are met). 0/absent
+#                 = free. Legacy aliases still work: a top-level `price:`, or
+#                 a leftover `coins:` entry inside `requires` (migrate to
+#                 `cost:` - a warning is logged otherwise).
+#   permission  : (optional) a permission for a rank-reserved kit.
+#   conditions  : (optional) PlaceholderAPI comparisons, ALL must be true.
+#                 Format: "%placeholder% OPERATOR value". Operators: == != >= <= > <.
+#                 Without PlaceholderAPI, a kit with conditions stays locked.
+#   items       : contents { material: NAME, amount: quantity,
+#                 enchantments: { NAME: level } }. Modern or old enchantment
+#                 names accepted (EFFICIENCY / DIG_SPEED, SHARPNESS /
+#                 DAMAGE_ALL...). A piece of armor is worn directly, replacing
+#                 the team's leather piece.
+#   effects     : (optional) potion effects re-applied on every respawn:
+#                 { type: SPEED, amplifier: 0, duration: seconds }.
+#                 duration 0 = until the next respawn (kept while alive).
+#
+# PROGRESSION (left to right, top row to bottom row = weakest to strongest):
+#   Row 1 (kits 1-7): 1 FREE starter + 2 stats-only + 4 cost-only
+#   Row 2 (kits 8-14): stats + cost
+#   Row 3 (kits 15-21): stats + level + cost (the strongest kits)
+# Within the cost-bearing kits the price rises strictly (250 -> 6500); stat
+# gates and level gates rise too, so later kits take days of play to reach.
+# Prices are tuned against rewards.yml coin income (~300 coins for a strong
+# game).
+#
+# Permission thetowers.kits.all (op by default): unlocks every kit.
+# Admin grant: /tt givekit <kit|id> <player> pays the cost on a player's behalf.
+# Reload with /tt reload.
+
+default-kit: default
+
+# Sound played when a player clicks a kit they cannot select yet (still locked,
+# or they cannot afford the coin cost). Set "sound: none" to disable it.
+#   sound  : an XSound enum name, case-insensitive (e.g. BLOCK_ANVIL_USE,
+#            BLOCK_NOTE_BLOCK_BASS, UI_BUTTON_CLICK, ENTITY_VILLAGER_NO).
+#   volume : 0.0-1.0, lower = quieter.
+#   pitch  : 0.0-2.0.
+# Default: a soft anvil strike (BLOCK_ANVIL_USE), quiet, at the lowest pitch.
+locked-click-sound:
+  sound: BLOCK_ANVIL_USE
+  volume: 0.4
+  pitch: 0.0
+
+kits:
+  # === Row 1: starter tier (1 free + 2 stats-only + 4 cost-only) ============
+  # 1. Everyone's kit: free, no condition, always available.
+  default:
+    id: 1
+    name: "&fStarter"
+    icon: LEATHER_CHESTPLATE
+    description:
+      - "&7Everyone's kit."
+      - "&7A reliable meal, nothing else."
+    items:
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 2. Melee from the very first second. Stats only.
+  fighter:
+    id: 2
+    name: "&cFighter"
+    icon: IRON_SWORD
+    description:
+      - "&7An iron sword from the start."
+    requires: { wins: 3 }
+    items:
+      - { material: IRON_SWORD, amount: 1 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 3. Harass the other tower from a distance. Stats only.
+  archer:
+    id: 3
+    name: "&aArcher"
+    icon: BOW
+    description:
+      - "&7A bow and arrows to annoy"
+      - "&7defenders from your bridge."
+    requires: { games: 6 }
+    items:
+      - { material: BOW, amount: 1 }
+      - { material: ARROW, amount: 24 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 4. Build fast, build high. Cost only.
+  builder:
+    id: 4
+    name: "&eBuilder"
+    icon: OAK_PLANKS
+    description:
+      - "&7Wood and sandstone to bridge"
+      - "&7toward the enemy tower."
+    cost: 250
+    items:
+      - { material: OAK_PLANKS, amount: 48 }
+      - { material: SANDSTONE, amount: 32 }
+      - { material: WOODEN_AXE, amount: 1 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 5. Dig your own path. Cost only.
+  miner:
+    id: 5
+    name: "&6Miner"
+    icon: IRON_PICKAXE
+    description:
+      - "&7Efficient tools to dig"
+      - "&7a shortcut through the map."
+    cost: 400
+    items:
+      - { material: IRON_PICKAXE, amount: 1, enchantments: { EFFICIENCY: 2 } }
+      - { material: IRON_SHOVEL, amount: 1, enchantments: { EFFICIENCY: 2 } }
+      - { material: COBBLESTONE, amount: 16 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 6. Enchant earlier than anyone. Cost only.
+  enchanter:
+    id: 6
+    name: "&dEnchanter"
+    icon: EXPERIENCE_BOTTLE
+    description:
+      - "&7A pile of XP and lapis"
+      - "&7for an early enchanting table."
+    cost: 550
+    items:
+      - { material: EXPERIENCE_BOTTLE, amount: 12 }
+      - { material: LAPIS_LAZULI, amount: 12 }
+      - { material: BOOKSHELF, amount: 4 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 7. Fast striker, permanent speed. Cost only.
+  scout:
+    id: 7
+    name: "&bScout"
+    icon: FEATHER
+    description:
+      - "&7Permanently faster."
+      - "&7Run in, hit, run out."
+    cost: 700
+    effects:
+      - { type: SPEED, amplifier: 0, duration: 0 }
+    items:
+      - { material: STONE_SWORD, amount: 1 }
+      - { material: COOKED_SALMON, amount: 12 }
+
+  # === Row 2: mid tier (stats + cost) ======================================
+  # 8. Fortify the base and the tower.
+  defender:
+    id: 8
+    name: "&2Defender"
+    icon: COBBLESTONE
+    description:
+      - "&7Stacks of blocks to wall"
+      - "&7your pool and your tower."
+    requires: { games: 8 }
+    cost: 900
+    items:
+      - { material: COBBLESTONE, amount: 64 }
+      - { material: OAK_PLANKS, amount: 32 }
+      - { material: OAK_FENCE, amount: 16 }
+      - { material: LADDER, amount: 16 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 9. A blizzard in your hands.
+  frost:
+    id: 9
+    name: "&b&lFrost"
+    icon: SNOWBALL
+    description:
+      - "&7A blizzard in your hands:"
+      - "&7snowballs to push attackers off."
+    requires: { points: 8 }
+    cost: 1100
+    items:
+      - { material: SNOWBALL, amount: 32 }
+      - { material: ICE, amount: 16 }
+      - { material: COOKED_SALMON, amount: 12 }
+
+  # 10. Pure aggression.
+  berserk:
+    id: 10
+    name: "&4Berserk"
+    icon: IRON_AXE
+    description:
+      - "&7A sharpened axe and"
+      - "&7no thoughts of defense."
+    requires: { kills: 15 }
+    cost: 1300
+    items:
+      - { material: IRON_AXE, amount: 1, enchantments: { SHARPNESS: 1 } }
+      - { material: COOKED_BEEF, amount: 12 }
+
+  # 11. One shot, one score chance.
+  sniper:
+    id: 11
+    name: "&9Sniper"
+    icon: ARROW
+    description:
+      - "&7A Power II bow and plenty"
+      - "&7of arrows. Aim for the bridge."
+    requires: { points: 12 }
+    cost: 1500
+    items:
+      - { material: BOW, amount: 1, enchantments: { ARROW_DAMAGE: 2 } }
+      - { material: ARROW, amount: 32 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 12. Golden apples and a healing aura.
+  medic:
+    id: 12
+    name: "&a&lMedic"
+    icon: GOLDEN_APPLE
+    description:
+      - "&7Golden apples and a healing"
+      - "&7aura at every respawn."
+    requires: { wins: 5 }
+    cost: 1800
+    effects:
+      - { type: REGENERATION, amplifier: 0, duration: 30 }
+    items:
+      - { material: GOLDEN_APPLE, amount: 3 }
+      - { material: BREAD, amount: 12 }
+
+  # 13. Jump over every bridge fight.
+  jumper:
+    id: 13
+    name: "&3Jumper"
+    icon: RABBIT_FOOT
+    description:
+      - "&7A permanent higher jump:"
+      - "&7take the shortcuts nobody guards."
+    requires: { kills: 20 }
+    cost: 2200
+    effects:
+      - { type: JUMP, amplifier: 1, duration: 0 }
+    items:
+      - { material: STONE_SWORD, amount: 1 }
+      - { material: APPLE, amount: 12 }
+
+  # 14. Fire everywhere.
+  pyro:
+    id: 14
+    name: "&6Pyro"
+    icon: FLINT_AND_STEEL
+    description:
+      - "&7Flint, lava and a bit of TNT:"
+      - "&7leave nothing standing."
+    requires: { wins: 8 }
+    cost: 2600
+    items:
+      - { material: FLINT_AND_STEEL, amount: 1 }
+      - { material: LAVA_BUCKET, amount: 1 }
+      - { material: TNT, amount: 2 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # === Row 3: endgame tier (stats + level + cost) ==========================
+  # 15. The wall that walks.
+  tank:
+    id: 15
+    name: "&7Tank"
+    icon: CHAINMAIL_CHESTPLATE
+    description:
+      - "&7A full chainmail set"
+      - "&7to soak the hits for your team."
+    requires: { wins: 10 }
+    level: 10
+    cost: 3000
+    items:
+      - { material: CHAINMAIL_HELMET, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: CHAINMAIL_CHESTPLATE, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: CHAINMAIL_LEGGINGS, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: CHAINMAIL_BOOTS, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: STONE_SWORD, amount: 1 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 16. A veteran's kit: many career wins.
+  warrior:
+    id: 16
+    name: "&6&lWARRIOR"
+    icon: GOLD_INGOT
+    description:
+      - "&7A veteran's kit for players"
+      - "&7with 15 career wins."
+    requires: { wins: 15 }
+    level: 15
+    cost: 3500
+    items:
+      - { material: STONE_SWORD, amount: 1, enchantments: { SHARPNESS: 1 } }
+      - { material: GOLDEN_APPLE, amount: 2 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 17. For proven players: a high level gate.
+  knight:
+    id: 17
+    name: "&f&lKnight"
+    icon: IRON_CHESTPLATE
+    description:
+      - "&7For proven players:"
+      - "&7reach level 20 to wield it."
+    requires: { kills: 30 }
+    level: 20
+    cost: 4000
+    items:
+      - { material: IRON_CHESTPLATE, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: IRON_SWORD, amount: 1, enchantments: { SHARPNESS: 1 } }
+      - { material: BREAD, amount: 16 }
+
+  # 18. Get in, kill, get out.
+  assassin:
+    id: 18
+    name: "&5Assassin"
+    icon: ENDER_PEARL
+    description:
+      - "&7A sharp sword and pearls"
+      - "&7to cross the map in a blink."
+    requires: { kills: 40 }
+    level: 25
+    cost: 4600
+    items:
+      - { material: IRON_SWORD, amount: 1, enchantments: { SHARPNESS: 2 } }
+      - { material: ENDER_PEARL, amount: 2 }
+      - { material: COOKED_BEEF, amount: 12 }
+
+  # 19. Reach level 30 to claim the diamond edge.
+  champion:
+    id: 19
+    name: "&b&lCHAMPION"
+    icon: DIAMOND
+    description:
+      - "&7The champion kit:"
+      - "&7diamond edge and pearls."
+    requires: { wins: 20 }
+    level: 30
+    cost: 5200
+    items:
+      - { material: DIAMOND_SWORD, amount: 1 }
+      - { material: ENDER_PEARL, amount: 2 }
+      - { material: GOLDEN_APPLE, amount: 2 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 20. Heavy armor AND strength: expensive and brutal.
+  goliath:
+    id: 20
+    name: "&8&lGoliath"
+    icon: DIAMOND_CHESTPLATE
+    description:
+      - "&7Diamond chestplate, permanent"
+      - "&7strength. Very hard to stop."
+    requires: { wins: 25, kills: 50 }
+    level: 40
+    cost: 5800
+    effects:
+      - { type: STRENGTH, amplifier: 0, duration: 0 }
+    items:
+      - { material: DIAMOND_CHESTPLATE, amount: 1, enchantments: { PROTECTION: 1 } }
+      - { material: IRON_SWORD, amount: 1 }
+      - { material: GOLDEN_APPLE, amount: 2 }
+      - { material: BAKED_POTATO, amount: 16 }
+
+  # 21. Endgame kit: career wins, a high level and a heavy price, all combined.
+  overlord:
+    id: 21
+    name: "&4&lOVERLORD"
+    icon: BEACON
+    description:
+      - "&7The ultimate kit:"
+      - "&7level 50, 40 wins, 80 kills and 6500 coins."
+    requires: { wins: 40, kills: 80 }
+    level: 50
+    cost: 6500
+    effects:
+      - { type: STRENGTH, amplifier: 0, duration: 0 }
+      - { type: REGENERATION, amplifier: 0, duration: 60 }
+    items:
+      - { material: DIAMOND_SWORD, amount: 1, enchantments: { SHARPNESS: 2 } }
+      - { material: DIAMOND_CHESTPLATE, amount: 1, enchantments: { PROTECTION: 2 } }
+      - { material: GOLDEN_APPLE, amount: 3 }
+      - { material: GOLDEN_CARROT, amount: 16 }

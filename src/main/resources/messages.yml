@@ -1,0 +1,448 @@
+# ==========================================================
+#  TheTowers - player messages (English, single file)
+# ==========================================================
+# Color codes with & ; %name% variables are replaced when displayed.
+# A key missing from your server's copy falls back to the bundled one.
+#
+# Organized by category:
+#   commands   - /tt command feedback
+#   coins      - coins system (/tt coins, /coins)
+#   tops       - leaderboard output formats (%thetowers_top_...%)
+#   arena      - arena state messages (join/leave/countdown/end)
+#   game       - in-game events (kill, death, point, streak, ...)
+#   game-start - the centered start-of-game banner (moved from config.yml)
+#   title      - on-screen titles (action bar / title / subtitle)
+#   summary    - end-of-game summary box
+#   team       - team names and team-choice feedback
+#   kits       - kit selection messages (the kit MENU itself is in kits.yml)
+#   spectator  - spectator gameplay messages (menu is in menus.yml)
+#   sign       - join signs
+#   placeholder- yes/no answers
+#   join       - main-lobby join messages (server join / back from a game)
+#
+# Menu lore lines (team menu, stats menu, spectator menu, setup
+# menu, lobby item names) live in menus.yml. Scoreboards in
+# scoreboard.yml.
+
+# ==========================================================
+#  Main-lobby join messages
+# ==========================================================
+# Shown when a player enters the lobby world (server join, coming back
+# from a game, or changing into the lobby world). Toggleable in config.yml
+# (join-messages.default-enabled / vip-enabled). The VIP line is used for
+# players who have thetowers.join.vip. Any PlaceholderAPI placeholder works
+# (%player_name%, %luckperms_prefix%, %thetowers_coins%...).
+join:
+  default: "&7%player_name% &ejoined the lobby"
+  vip: "%luckperms_prefix% &7%player_name% &ejoined the lobby"
+
+# ================= Commands =================
+command.usage: "&cUsage: /tt %form%"
+command.args.player: "<player>"
+command.args.arena: "<arena>"
+command.args.arena_team: "<arena> <Red|Blue|Yellow|Green>"
+command.args.arena_team_zone: "<arena> <team> <spawnzone|chestzone>"
+command.args.arena_type: "<arena> <type>"
+command.args.arena_etc: "<arena> ..."
+command.args.arena_number: "<arena> <number>"
+command.no_permission: "&cYou don't have the permission %permission%."
+command.reloaded: "&aConfiguration, messages and arenas reloaded."
+command.ingame_only: "&cThis subcommand must be run in game."
+command.not_in_arena: "&cYou are not in any arena."
+command.left_arena: "&aYou left the arena %arena%."
+command.server_lobby_set: "&aMain lobby set at your position."
+command.arena_exists: "&cAn arena with this name already exists."
+command.arena_invalid_name: "&cInvalid name: letters, digits, _ and - only, 16 characters max."
+command.arena_created: "&aArena %name% created. Set it up with /tt (menu) or /tt help."
+command.arena_none_named: "&cNo arena has this name."
+command.arena_deleted: "&aArena %arena% deleted."
+command.arena_not_found: "&cNo arena is named %name%."
+command.arena_lobby_set: "&aWaiting lobby of %arena% set at your position."
+command.unknown_team: "&cUnknown team. Possible values: %teams%"
+command.spawn_set: "&aSpawn point of team %color%%team%&a saved."
+command.arena_incomplete: "&cIncomplete arena: %problem%"
+command.arena_saved: "&aArena %arena% validated and saved."
+command.no_game_running: "&cNo game running in this arena."
+command.game_stopped: "&aGame stopped."
+command.unknown_subcommand: "&cUnknown subcommand. Type /tt help."
+command.already_in_arena: "&cYou are already in arena %arena%. Use /tt leave first."
+command.join_failed: "&cCannot join: %reason%."
+command.joined_arena: "&aYou joined arena %arena%."
+command.game_already_running: "&cA game is already running in this arena."
+command.need_two_players: "&cAt least 2 players are needed in the arena to start."
+command.game_started: "&aGame started on %arena%."
+command.value_positive: "&cThe value must be greater than 0."
+command.min_players_set: "&aMinimum players: %value%"
+command.max_players_set: "&aMaximum players: %value%"
+command.teams_range: "&cThe number of teams must be between 2 and 4."
+command.teams_set: "&aNumber of teams: %value%"
+command.players_per_team_set: "&aPlayers per team: %value%"
+command.points_set: "&aPoints to win: %value%"
+command.duration_set: "&aMaximum duration: %value% min"
+command.bows_on: "&aBows allowed in this arena."
+command.bows_off: "&cBows forbidden in this arena (neither kit nor crafting)."
+command.spectators_on: "&aSpectators allowed in arena %arena%."
+command.spectators_off: "&cSpectators forbidden in arena %arena%."
+command.unknown_generator: "&cUnknown generator type. Types defined in config.yml: %types%"
+command.generator_added: "&aGenerator &f%type%&a added at your position in %arena%."
+command.generators_cleared: "&a%count% generator(s) removed."
+command.no_arenas: "&7No arena is set up."
+command.arenas_header: "&6Arenas (%count%):"
+command.status_incomplete: "INCOMPLETE"
+command.arena_list_entry: "&7 - &f%name%&7: %status%&7 (%current%/%max%)"
+command.info_header: "&6Arena %arena%"
+command.info_state: "&7 State: &f%state%"
+command.info_players: "&7 Players: &f%current%/%max%&7 (minimum %min%)"
+command.info_teams: "&7 Teams: &f%teams%&7 x &f%per%&7 player(s)"
+command.info_rules: "&7 Goal: &f%points%&7 points, &f%minutes%&7 min max, bows %bows%"
+command.info_lobby: "&7 Lobby: %value%"
+command.info_team: "%color% %team%&7: spawn %spawn%&7 | pool %pool%&7 | zone %spawnzone%&7 | chests %chestzone%"
+command.info_generators: "&7 Generators: &f%value%"
+command.none: "none"
+command.undefined: "not set"
+command.info_ready: "&a Arena ready."
+command.info_problem: "&c Problem: %problem%"
+command.no_stats_player: "&7No statistics for this player."
+command.stats_header: "&6Stats of &f%name%"
+command.stats_games: "&7 Games: &f%games%"
+command.stats_wins_losses: "&7 Wins: &a%wins%&7  Losses: &c%losses%"
+command.stats_kd: "&7 Kills: &f%kills%&7  Deaths: &f%deaths%&7  K/D: &f%kd%"
+command.stats_points: "&7 Points scored: &f%points%"
+command.unknown_stat: "&cUnknown stat. Choices: %choices%"
+command.unknown_period: "&cUnknown period \"%value%\". Choices: all, week, month."
+command.period.week: "this week"
+command.period.month: "this month"
+command.no_stats: "&7No statistics recorded."
+command.no_stats_period: "&7Nobody has played %period% yet."
+command.top_header: "&6Top %stat% (all time):"
+command.top_header_period: "&6Top %stat% %period% &7(%key%):"
+command.top_entry: "&7 %rank%. &f%name%&7 - &6%value%"
+command.not_integer: "&c\"%value%\" is not an integer."
+command.randomjoin_no_game: "&cNo waiting arena with a free slot - sent back to the lobby."
+command.player_not_online: "&cNo player named %player% is online."
+command.player_not_found: "&cNo player named %player% found."
+command.help_header: "&6TheTowers commands"
+command.help_join: "&7 /tt join <arena> &8join a game"
+command.help_randomjoin: "&7 /tt randomjoin &8join the waiting arena with the most players"
+command.help_leave: "&7 /tt leave &8leave the game"
+command.help_list: "&7 /tt list &8list arenas"
+command.help_stats: "&7 /tt stats [player] &8show stats (menu)"
+command.help_top: "&7 /tt top <stat> [all|week|month] &8leaderboard"
+command.help_kit: "&7 /tt kit [kit] &8choose your kit (works in the main lobby too)"
+command.help_kit_buy: "&7 /tt kit buy <kit> &8buy a kit with coins (Vault)"
+command.help_spectate: "&7 /tt spectate <arena> &8watch a running game"
+command.help_chat: "&7 /tt chat <team|all> &8default chat (team or everyone)"
+command.help_coins: "&7 /tt coins add|remove|set|reset <player> [amount] &8admin coins"
+command.help_coins_self: "&7 /coins &8show your coin balance"
+command.help_admin_header: "&6Administration"
+command.help_edit: "&7 /tt [arena] &8or &7/tt edit [arena] &8setup menu"
+command.help_setlobby: "&7 /tt setlobby &8server main lobby"
+command.help_create_delete: "&7 /tt create|delete <arena>"
+command.help_setarenalobby: "&7 /tt setarenalobby <arena> &8waiting lobby"
+command.help_setspawn: "&7 /tt setspawn <arena> <team> &8team base, at your position"
+command.help_zones: "&7 /tt setpool|setspawnzone|setchestzone <arena> <team> &82-click zone"
+command.help_clearzone: "&7 /tt clearzone <arena> <team> <spawnzone|chestzone>"
+command.help_generators: "&7 /tt addgenerator <arena> <type> &8| &7cleargenerators <arena> [type]"
+command.help_setteams: "&7 /tt setteams|setplayersperteam <arena> <number>"
+command.help_setplayers: "&7 /tt setminplayers|setmaxplayers <arena> <number>"
+command.help_rules: "&7 /tt setpoints|setduration <arena> <number> &8| &7bows <arena> <on|off>"
+command.help_save: "&7 /tt save|info|start|stop <arena>"
+command.help_spectators: "&7 /tt spectators <arena> <on|off> &8allow spectators"
+command.help_reload: "&7 /tt reload"
+command.help_removekit: "&7 /tt removekit <kit|id> <player> &8remove a player's kit unlock"
+
+# ================= Coins =================
+coins.balance_self: "&6Your balance: &f%amount% &6%currency%"
+coins.balance_other: "&6Balance of &f%player%&6: &f%amount% &6%currency%"
+coins.no_economy: "&cThe coins economy is not available right now."
+coins.added: "&aAdded &f%amount% &a%currency% to &f%player%&a. New balance: &f%balance%"
+coins.removed: "&aRemoved &f%amount% &a%currency% from &f%player%&a. New balance: &f%balance%"
+coins.set: "&aSet &f%player%&a's balance to &f%amount% &a%currency%."
+coins.reset: "&aReset &f%player%&a's balance to &f%amount% &a%currency%."
+coins.invalid_amount: "&cInvalid amount: %value%."
+coins.usage: "&cUsage: /tt coins add|remove|set <player> <amount> &8| &7/tt coins reset <player>"
+
+# ================= Tops (leaderboards) =================
+# Output format of each %thetowers_top_<stat>_<rank>_<period>%
+# placeholder. Variables:
+#   %rank%              the rank in the list (1-10)
+#   %luckperms_prefix%  the player's saved LuckPerms prefix
+#   %player_name%       the player's name
+#   %value%             the stat value for this period
+# A rank nobody holds yet resolves to the empty line below.
+lobby.top_kills: "&e%rank%. %luckperms_prefix%%player_name% &7- &6%value% kills"
+lobby.top_wins: "&e%rank%. %luckperms_prefix%%player_name% &7- &6%value% wins"
+lobby.top_points: "&e%rank%. %luckperms_prefix%%player_name% &7- &6%value% points"
+lobby.top_money: "&e%rank%. %luckperms_prefix%%player_name% &7- &6%value% coins"
+lobby.top_empty: "&7%rank%. &8-"
+
+# ================= Arena =================
+arena.validate.no_lobby: "the waiting lobby is not set (/tt setarenalobby %arena%)"
+arena.validate.teams_range: "the number of teams must be between 2 and 4"
+arena.validate.per_team_positive: "the number of players per team must be greater than 0"
+arena.validate.missing_spawn: "the spawn point of team %team% is missing (/tt setspawn %arena% %team%)"
+arena.validate.missing_pool: "the pool of team %team% is missing (/tt setpool %arena% %team%)"
+arena.validate.min_players: "the minimum number of players must be at least 2"
+arena.validate.max_below_min: "the maximum number of players is below the minimum"
+arena.validate.max_exceeds: "the maximum number of players (%max%) exceeds the teams capacity (%teams% x %per% = %capacity%)"
+arena.join.already_in: "you are already in this arena"
+arena.join.in_progress: "a game is already running in this arena"
+arena.join.in_progress_spectate: "a game is already running, type /tt spectate %arena% to watch it"
+arena.join.full: "the arena is full (%current%/%max%)"
+arena.join.misconfigured: "the arena is not properly set up: %problem%"
+arena.broadcast.joined: "&a%player%&7 joined the arena &f(%current%/%max%)"
+arena.broadcast.left: "&c%player%&7 left the arena &f(%current%/%max%)"
+arena.countdown_cancelled: "&eCountdown cancelled: not enough players."
+arena.your_team: "You are in team %color%%team%&7."
+arena.team_forfeit: "%color%Team %team%&7 forfeits: no player left."
+arena.broadcast.disconnected: "&e%player%&7 disconnected. They have &f%time%&7 to come back."
+arena.broadcast.disconnected_nolimit: "&e%player%&7 disconnected. They can come back until the end of the game."
+arena.broadcast.disconnect_death: "&c%player%&7 disconnected: counted as a death, items dropped."
+arena.broadcast.combat_log: "&c%player%&7 disconnected during a fight: counted as a death."
+arena.broadcast.rejoined: "%color%%player%&7 is back in the game!"
+arena.broadcast.reconnect_expired: "&c%player%&7 did not come back in time."
+arena.rejoined_self: "&aYou are back in the game, team %color%%team%&a."
+# End-of-game screen, SkyWars style: a boxed announcement, centered in chat.
+# A line is one entry of the list; %time% is the game duration (M:SS).
+arena.end_no_winner:
+  - "&8&m----------------------------------------"
+  - " "
+  - "&7&lDRAW"
+  - " "
+  - "&7Nobody won the game on &f%arena%&7."
+  - "&7Duration: &f%time%"
+  - " "
+  - "&8&m----------------------------------------"
+arena.end_winner:
+  - "&8&m----------------------------------------"
+  - " "
+  - "&6&l★ VICTORY ★"
+  - " "
+  - "%color%Team %team% &7won the game on &f%arena%&7!"
+  - "&7Goal reached: &f%score%&7/&f%goal% &8| &7Duration: &f%time%"
+  - " "
+  - "&6&lMVP: &f%mvp% &7(&a%mvp_points% pts&7, &b%mvp_kills% kills&7)"
+  - " "
+  - "&8&m----------------------------------------"
+
+# ================= Game =================
+game.countdown_broadcast: "&eGame starts in &f%n%&e seconds."
+game.mark: "%color%%player%&7 scores for team %color%%team%&7! &f(%score%/%goal%)"
+game.match_point: "&c&lMATCH POINT! &7Team %color%%team%&7 is one point away from victory."
+game.time_left: "&eGame ends in &f%time%&e."
+game.time_up_winner: "&eTime's up! %color%Team %team%&e leads and wins."
+game.overtime: "&cTime's up on a tie: sudden death! The next point wins."
+game.died: "%color%%player%&7 died."
+game.killed_by: "%color%%player%&7 was killed by %kcolor%%killer%&7."
+game.streak.double: "&6%player% &egets a &6DOUBLE KILL&e!"
+game.streak.triple: "&6%player% &egets a &6TRIPLE KILL&e!"
+game.streak.quadruple: "&6%player% &egets a &6QUADRUPLE KILL&e!"
+game.streak.many: "&6%player% &eis unstoppable: &6%count% kills&e in a row!"
+game.streak.stopped: "&6%killer%&e ends &6%player%&e's streak (%count% kills)!"
+game.no_friendly_fire: "&cYou can't hit a teammate."
+game.chest_place_denied: "&cYou can't place chests during a game."
+game.chest_break_denied: "&cChests are unbreakable."
+game.piston_denied: "&cPistons are forbidden."
+game.protected_zone: "&cProtected zone: you can't build or break here."
+game.chest_locked: "&cThis chest belongs to team %color%%team%&c."
+
+# ================= Game start banner =================
+# Centered multi-line message shown in chat when a game starts.
+# Moved out of config.yml. Supports & colors and the variables
+# %arena%, %goal% (points to win) and %minutes% (maximum duration).
+# An empty list (or enabled: false) shows nothing.
+game-start:
+  enabled: true
+  centered: true
+  message:
+    - "&8&m----------------------------------------"
+    - "&6&lTHE TOWERS"
+    - "&eThe game has begun!"
+    - "&7Jump into the enemy pool of the other team to score."
+    - "&7First team to &f%goal% &epoints wins. &7Max: &f%minutes% min"
+    - "&8&m----------------------------------------"
+
+# ================= On-screen titles =================
+title.countdown: "&c%n%"
+title.game_start: "&aGo!"
+title.game_start_sub: "&7First to &f%goal%&7 points"
+title.mark: "%color%%score% &7/ &f%goal%"
+title.mark_sub: "%color%%player% &7scored!"
+title.match_point: "&c&lMATCH POINT"
+title.match_point_sub: "%color%Team %team% &7needs one more point"
+title.overtime: "&c&lSUDDEN DEATH"
+title.overtime_sub: "&7The next point wins"
+title.victory: "&6&lVICTORY"
+title.defeat: "&c&lDEFEAT"
+title.draw: "&7&lDRAW"
+title.winner_sub: "%color%Team %team% wins"
+
+# ================= End of game summary =================
+# SkyWars-style summary box, centered in chat right after the victory screen.
+# One list entry = one line. Variables:
+#   %teams%          the score of every team ("Red 7/10 - Blue 5/10")
+#   %points_player% / %points%      the top scorer and their points
+#   %kills_player% / %kills%        the top killer and their kills
+#   %damage_player% / %damage%      the most damage dealt and its value (hearts)
+summary.box:
+  - "&8&m----------------------------------------"
+  - "&6&lGAME SUMMARY"
+  - " "
+  - "%teams%"
+  - " "
+  - "&6Most kills: &f%kills_player% &7(&b%kills%&7)"
+  - "&6Top scorer: &f%points_player% &7(&a%points% pts&7)"
+  - "&6Most damage: &f%damage_player% &7(&c%damage% hearts&7)"
+  - "&8&m----------------------------------------"
+summary.nobody: "&8nobody"
+
+# ================= Lobby items =================
+# Countdown feedback of the leave item. The display names of the
+# lobby items (Leave, Team, Kits, ...) are in menus.yml.
+lobby.leave_countdown_start: "&eLeaving in &f%time%&e. &7Right click again to cancel."
+lobby.leave_countdown_cancel: "&aLeave cancelled."
+lobby.leave_countdown_number: "&7Leaving in &e%n%&7..."
+
+# ================= Team =================
+# Display name of each team, used in the team menu (the name on top
+# of each wool), the scoreboard team lines, chat tags and most
+# messages. Edit the text and its color freely. A color code inside
+# these names is kept everywhere they appear.
+team.name.red: "&cRed"
+team.name.blue: "&9Blue"
+team.name.yellow: "&eYellow"
+team.name.green: "&aGreen"
+# Feedback messages of the team menu (the menu layout itself is in
+# menus.yml under team-menu).
+team.menu_chosen: "&aYou will play in team %color%%team%&a."
+team.menu_already: "&eYou already chose team %color%%team%&e."
+team.menu_full: "&cTeam %color%%team%&c is full (%max% players)."
+team.menu_not_in_arena: "&cYou are not in this arena."
+team.menu_too_late: "&cThe game already started: teams are locked."
+team.menu_unknown: "&cThis team is not used by this arena."
+
+# ================= Rewards feedback =================
+# Shown in chat when EXP / coins are granted or EXP is lost, with the reason.
+# %amount% = the number granted/lost, %reason% = one of the rewards.reason.* keys.
+rewards.exp.gain: "&3+%amount% exp &7(%reason%)"
+rewards.exp.loss: "&c-%amount% exp &7(%reason%)"
+rewards.coins.gain: "&6+%amount% coins &7(%reason%)"
+rewards.reason.kill: "Player killed"
+rewards.reason.death: "You died"
+rewards.reason.score: "Score"
+rewards.reason.win: "Game Win"
+rewards.reason.loss: "Game Loss"
+rewards.reason.draw: "Game Draw"
+
+# ================= Kits =================
+# Kit selection messages. The kit MENU itself (icons, layout) is
+# configured in kits.yml and is the only menu not in menus.yml.
+kits.title: "&8Choose your kit"
+kits.contents: "&7Contents"
+kits.content_line: "&f%amount%x &7%item%%ench%"
+kits.enchanted: " &d(enchanted)"
+kits.price: "&6Cost: &e%price% &6Coins"
+kits.owned: "&aUnlocked"
+kits.status.selected: "&aCurrently selected"
+kits.status.click: "&eClick to select!"
+kits.status.buy: "&eClick to purchase!"
+kits.status.permission: "&6Reserved for a rank"
+kits.locked.name: "&c&l???"
+kits.locked.label: "&c&lLOCKED"
+kits.locked.requirements: "&7Unlock requirements:"
+kits.locked.hint: "&7Keep playing to reveal this kit."
+kits.requirement: "%color%%label%: &f%current%&7/&f%needed%"
+kits.coins_cost: "%color%%label%: &f%price%"
+kits.level_requirement: "%color%Level: &f%current%&7/&f%needed%"
+kits.condition: "%color%%condition%"
+kits.stat.games: "Games played"
+kits.stat.wins: "Wins"
+kits.stat.losses: "Losses"
+kits.stat.kills: "Kills"
+kits.stat.deaths: "Deaths"
+kits.stat.points: "Points scored"
+kits.stat.coins: "Coins"
+kits.selected: "&aKit %kit%&a selected."
+kits.selected_next_life: "&aKit %kit%&a selected: you will get it on your next respawn."
+kits.locked_notice: "&cThis kit is not unlocked yet."
+kits.unknown: "&cUnknown kit: %name%. Type /tt kit to see the list."
+kits.bought: "&aKit %kit%&a bought for &f%price%&a coins!"
+kits.buy_already: "&cYou already own this kit."
+kits.buy_locked: "&cYou don't meet this kit's conditions yet."
+kits.buy_no_economy: "&cNo economy plugin found (Vault): purchases are disabled."
+kits.buy_poor: "&cNot enough coins: you need &f%price%&c."
+kits.coins_requirement_missing: "&cMissing the Coins requirement: you have &f%current%&c, need &f%price%&c."
+# Sent when a locked kit is bought by clicking it (the one-time cost is paid and
+# the kit is selected at the same time).
+kits.purchased: "&aKit &e%kit%&a purchased and selected."
+kits.purchased_next_life: "&aKit &e%kit%&a purchased. Selected - you will get it on your next respawn."
+# /tt givekit <kit|id> <player> (admin): pays the one-time cost on a player's
+# behalf so the kit is revealed (unlocked) without charging them.
+kits.givekit_success: "&aGave kit &e%kit%&a to &e%player%&a."
+kits.givekit_received: "&aAn admin gave you the kit &e%kit%&a!"
+kits.givekit_free: "&cThat kit has no cost; it is already available."
+kits.givekit_already: "&c%player% already owns the kit &e%kit%&c."
+# /tt removekit <kit|id> <player> (admin): strips a player's kit unlock, as if
+# they had never bought it. A free / requirement-only kit has no purchase to
+# remove; a paid kit the player does not own is reported as not-owned. After a
+# removal the player can obtain the kit again through the normal process (pay
+# again, or meet the requirements).
+kits.removekit_success: "&aRemoved the kit &e%kit%&a from &e%player%&a."
+kits.removekit_received: "&cYour &e%kit%&c kit unlock was removed by an admin."
+kits.removekit_free: "&cThat kit has no cost; there is no purchase to remove."
+kits.removekit_not_owned: "&c%player% does not own the kit &e%kit%&c."
+kits.unlocked: "&6&lNew kit unlocked: %kit%&6! &7(/tt kit)"
+
+# ================= Spectators =================
+# Spectator gameplay messages. The players menu (title, lore) and
+# the hotbar item names are in menus.yml.
+spectator.teleported: "&7Teleported to %color%%player%&7."
+spectator.player_gone: "&cThis player left the game."
+spectator.out_of_bounds: "&cStay inside the play area."
+spectator.joined: "&7You are now watching %arena%. Fly, be quiet and have fun."
+spectator.disabled: "&cSpectators are not allowed in this arena."
+spectator.not_running: "&cNo game is running in this arena."
+spectator.full: "&cToo many spectators here (%max% max)."
+
+# ================= Join signs =================
+sign.random: "Random"
+sign.join_action: "Join"
+sign.state.waiting: "Waiting"
+sign.state.starting: "Starting"
+sign.state.running: "In game"
+sign.state.full: "Full"
+sign.state.unavailable: "Unavailable"
+sign.created: "&aJoin sign created for %arena%."
+sign.created_random: "&aRandom join sign created."
+sign.no_game: "&cNo game available right now."
+
+# ================= Setup / placement =================
+# Chat feedback during the arena setup flow (placement mode and
+# arena naming). The setup MENU itself (icons, lore) is in
+# menus.yml under config-menu.
+config.team.zone_cleared: "&aZone cleared."
+config.place.point: "&eStand where you want %what%&e then right click. &7(/tt cancel to abort)"
+config.place.point_done: "&aPosition saved for %what%&a."
+config.place.zone_first: "&eMark out %what%&e: right click a first corner (the targeted block). &7(/tt cancel to abort)"
+config.place.zone_second: "&eCorner 1 saved (%pos%). Right click the opposite corner."
+config.place.zone_done: "&aZone saved for %what%&a: &f%zone%"
+config.place.zone_other_world: "&cBoth corners must be in the same world. Click the second corner again."
+config.place.zone_too_big: "&cZone far too big (%volume% blocks): check your corners. Click the second corner again."
+config.place.what.lobby: "the waiting lobby"
+config.place.what.spawn: "the spawn point of team %color%%team%"
+config.place.what.generator: "a &f%type%&e generator"
+config.place.what.pool: "the pool of team %color%%team%"
+config.place.what.spawn_zone: "the protected zone of team %color%%team%"
+config.place.what.chest_zone: "the chest zone of team %color%%team%"
+config.place.cancelled: "&cPlacement cancelled."
+config.place.arena_gone: "&cThis arena no longer exists."
+config.place.not_placing: "&cYou are not placing anything."
+config.naming.prompt: "&eType the name of the new arena in the chat. &7(cancel to abort)"
+config.naming.created: "&aArena %name% created."
+config.naming.cancelled: "&cArena creation cancelled."
+config.naming.timeout: "&cTime is up, arena creation cancelled."
+
+# ================= Placeholders =================
+# Yes/no answers of %thetowers_ingame% and %thetowers_overtime%.
+placeholder.yes: "yes"
+placeholder.no: "no"

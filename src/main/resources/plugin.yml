@@ -1,0 +1,106 @@
+name: TheTowers
+version: ${project.version}
+main: com.thetowers.Main
+author: xLaugh
+description: The Towers minigame - score in the enemy pool. Multi-arena. Server version 1.12.2.
+
+# Optional, never required: TheTowers works without them.
+#   PlaceholderAPI -> registers the %thetowers_...% placeholders, and enables
+#     the "conditions" (e.g. "%player_level% >= 15") of kits.yml
+#   Vault -> TheTowers registers its OWN coin economy with Vault (so shop
+#     plugins and %vault_eco_balance% see it), and pays the "price" of kits.yml
+#   World managers -> loaded BEFORE TheTowers, so the arena worlds already
+#     exist when arenas.yml is read.
+softdepend: [PlaceholderAPI, Vault, Multiverse-Core, MultiWorld, MyWorlds, Hyperverse]
+
+commands:
+  tt:
+    description: Main command of the TheTowers plugin.
+    usage: /<command> <subcommand> [arguments]
+    # thetower: old name of the plugin, kept for players' habits.
+    aliases: [thetowers, thetower]
+    # Intentionally NO permission here: the command must stay accessible to
+    # players for /tt join and /tt leave. Admin sub-commands check
+    # thetowers.admin one by one.
+  coins:
+    description: Show your TheTowers coin balance (Vault economy).
+    usage: /<command>
+    # No permission: every player can check their own balance. Admin
+    # operations (/tt coins add|remove|set|reset) are gated by thetowers.admin.
+  leveling:
+    description: The separate leveling system (level/EXP, level-up rewards).
+    usage: /<command> <info|addexp|setexp|removeexp|addlevel|setlevel|removelevel|reload> [args]
+    aliases: [level, lvl, xp]
+    # No permission here on purpose: /leveling info is open to everyone (own
+    # progress); the mutation sub-commands and reload check thetowers.admin.
+  bmv:
+    description: The standalone world-manager module (create/load/unload worlds).
+    usage: /<command> <create|load|unload|tp|info|list|set|flags|reload> [args]
+    aliases: [mv, worldmanager]
+    # No permission here on purpose: every /bmv sub-command checks thetowers.admin.
+  party:
+    description: The party system (invite, accept, deny, chat, join as a group, ...).
+    usage: /<command> <invite|accept|deny|ignore|disband|promote|chat|list|leave|kick|join|reload> [args]
+    aliases: [p, parties]
+    # No permission here on purpose: /party help works for everyone; the player
+    # subcommands check thetowers.party.use and /party reload checks
+    # thetowers.party.reload, one by one.
+
+permissions:
+  thetowers.admin:
+    description: Access to arena administration commands.
+    default: op
+  thetowers.join:
+    description: Allows joining an arena.
+    default: true
+  thetowers.spectate:
+    description: Allows watching a running game (/tt spectate).
+    default: true
+  thetowers.arenamode.bypass:
+    description: Not auto-joined when the server is in arena mode.
+    default: op
+  thetowers.kits.all:
+    description: Unlocks every kit, with no condition (tests, administrators).
+    default: op
+  thetowers.kit.warrior:
+    description: Access to the Warrior kit from kits.yml (give to ranks).
+    default: false
+  thetowers.kit.champion:
+    description: Access to the Champion kit from kits.yml (give to ranks).
+    default: false
+  thetowers.party.use:
+    description: Use the /party subcommands (invite, accept, chat, join, ...).
+    default: true
+  thetowers.party.reload:
+    description: Reload parties.yml with /party reload.
+    default: op
+
+  # Old permissions, from before the TheTower -> TheTowers rename. A server
+  # that already gave them to its groups has nothing to change: each one grants
+  # the new one (Bukkit "children" mechanism). They are granted to nobody by
+  # default.
+  thetower.admin:
+    description: Old name of thetowers.admin.
+    default: false
+    children:
+      thetowers.admin: true
+  thetower.join:
+    description: Old name of thetowers.join.
+    default: false
+    children:
+      thetowers.join: true
+  thetower.arenamode.bypass:
+    description: Old name of thetowers.arenamode.bypass.
+    default: false
+    children:
+      thetowers.arenamode.bypass: true
+  thetower.kits.all:
+    description: Old name of thetowers.kits.all.
+    default: false
+    children:
+      thetowers.kits.all: true
+  thetower.kit.warrior:
+    description: Old name of thetowers.kit.warrior.
+    default: false
+    children:
+      thetowers.kit.warrior: true

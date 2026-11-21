@@ -1,0 +1,1108 @@
+package com.thetowers.command;
+
+import com.thetowers.Main;
+import com.thetowers.arena.Arena;
+import com.thetowers.arena.ArenaManager;
+import com.thetowers.arena.State;
+import com.thetowers.compat.Compat;
+import com.thetowers.config.PlacementSession;
+import com.thetowers.game.GeneratorSpot;
+import com.thetowers.game.KitDefinition;
+import com.thetowers.lang.Messages;
+import com.thetowers.region.Cuboid;
+import com.thetowers.stats.PlayerStats;
+import com.thetowers.stats.StatsManager;
+import com.thetowers.stats.StatsStorage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+
+/**
+ * The {@code /tt} command and its tab completion.
+ *
+ * <p>Everything the configuration menu does ({@code /tt} with no argument)
+ * can also be done by command. The zones (pool, spawn zone, chest zone) go
+ * through the same "placement mode" as the menu: two right clicks on
+ * opposite corners.
+ *
+ * <p>Permissions are checked subcommand by subcommand: a player must be
+ * able to run /tt join without being an administrator.
+ */
+public class CommandTower implements CommandExecutor, TabCompleter {
+
+    private static final String ADMIN = "thetowers.admin";
+    private static final String JOIN = "thetowers.join";
+    private static final String SPECTATE = "thetowers.spectate";
+
+    private static final List<String> PLAYER_SUBCOMMANDS =
+            Arrays.asList("join", "randomjoin", "leave", "list", "stats", "top", "kit", "spectate", "chat", "help");
+
+    private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList(
+            "edit", "cancel", "create", "delete", "setlobby", "setarenalobby", "setspawn",
+            "setpool", "setspawnzone", "setchestzone", "clearzone", "addgenerator",
+            "cleargenerators", "setteams", "setplayersperteam", "setminplayers", "setmaxplayers",
+            "setpoints", "setduration", "bows", "spectators", "save", "info", "start", "stop",
+            "reload", "coins", "givekit", "removekit");
+
+    /** Subcommands that take a team as 3rd argument. */
+    private static final List<String> TEAM_SUBCOMMANDS =
+            Arrays.asList("setspawn", "setpool", "setspawnzone", "setchestzone", "clearzone");
+
+    private final Main main;
+    private final ArenaManager arenaManager;
+
+    public CommandTower(Main main, ArenaManager arenaManager) {
+        this.main = main;
+        this.arenaManager = arenaManager;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0) {
+            // With no argument: an admin in game opens the configuration
+            // menu, everyone else (or the console) gets the help.
+            if (sender instanceof Player && sender.hasPermission(ADMIN)) {
+                main.getConfigMenu().openList((Player) sender);
+            } else {
+                sendHelp(sender);
+            }
+            return true;
+        }
+
+        String subcommand = args[0].toLowerCase(Locale.ROOT);
+
+        if ("help".equals(subcommand)) {
+            sendHelp(sender);
+            return true;
+        }
+        if ("list".equals(subcommand)) {
+            listArenas(sender);
+            return true;
+        }
+        if ("stats".equals(subcommand)) {
+            String target = args.length >= 2 ? args[1]
+                    : (sender instanceof Player ? sender.getName() : null);
+            if (target == null) {
+                send(sender, usage("stats " + Messages.tr("command.args.player")));
+            } else if (sender instanceof Player) {
+                // Players get the configurable inventory menu (menus.yml).
+                main.getStatsMenu().open((Player) sender, target);
+            } else {
+                // Console: keep the chat output.
+                showStats(sender, target);
+            }
+            return true;
+        }
+        if ("coins".equals(subcommand)) {
+            if (!checkPermission(sender, ADMIN)) {
+                return true;
+            }
+            handleCoins(sender, args);
+            return true;
+        }
+        if ("givekit".equals(subcommand)) {
+            // /tt givekit <kit|id> <player>: admin grants a kit - pays its
+            // one-time coin cost on the player's behalf so the kit is revealed
+            // (unlocked) without charging them. Usable from the console too.
+            if (!checkPermission(sender, ADMIN)) {
+                return true;
+            }
+            if (args.length < 3) {
+                send(sender, usage("givekit <kit|id> " + Messages.tr("command.args.player")));
+                return true;
+            }
+            KitDefinition kit = main.getKitManager().getKit(args[1]);
+            if (kit == null) {
+                send(sender, Messages.tr("kits.unknown", "name", args[1]));
+                return true;
+            }
+            Player target = Bukkit.getPlayerExact(args[2]);
+            if (target == null) {
+                send(sender, Messages.tr("command.player_not_found", "player", args[2]));
+                return true;
+            }
+            String error = main.getKitManager().giveKit(target, kit);
+            if (error == null) {
+                send(sender, Messages.tr("kits.givekit_success",
+                        "kit", kit.getDisplayName(), "player", target.getName()));
+                target.sendMessage(Main.PREFIX
+                        + Messages.tr("kits.givekit_received", "kit", kit.getDisplayName()));
+            } else {
+                send(sender, Messages.tr(error, "kit", kit.getDisplayName(), "player", target.getName()));
+            }
+            return true;
+        }
+        if ("removekit".equals(subcommand)) {
+            // /tt removekit <kit|id> <player>: admin strips a player's kit
+            // unlock, as if they had never bought it. Usable from the console.
+            if (!checkPermission(sender, ADMIN)) {
+                return true;
+            }
+            if (args.length < 3) {
+                send(sender, usage("removekit <kit|id> " + Messages.tr("command.args.player")));
+                return true;
+            }
+            KitDefinition kit = main.getKitManager().resolveKit(args[1]);
+            if (kit == null) {
+                send(sender, Messages.tr("kits.unknown", "name", args[1]));
+                return true;
+            }
+            Player target = Bukkit.getPlayerExact(args[2]);
+            if (target == null) {
+                send(sender, Messages.tr("command.player_not_found", "player", args[2]));
+                return true;
+            }
+            String error = main.getKitManager().removeKit(target, kit);
+            if (error == null) {
+                send(sender, Messages.tr("kits.removekit_success",
+                        "kit", kit.getDisplayName(), "player", target.getName()));
+                target.sendMessage(Main.PREFIX
+                        + Messages.tr("kits.removekit_received", "kit", kit.getDisplayName()));
+            } else {
+                send(sender, Messages.tr(error, "kit", kit.getDisplayName(), "player", target.getName()));
+            }
+            return true;
+        }
+        if ("top".equals(subcommand)) {
+            // /tt top <stat> [all|day|week]: all time, today, week.
+            String stat = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "wins";
+            String period = args.length >= 3 ? args[2].toLowerCase(Locale.ROOT) : "all";
+            showTop(sender, stat, period);
+            return true;
+        }
+        if ("reload".equals(subcommand)) {
+            if (!checkPermission(sender, ADMIN)) {
+                return true;
+            }
+            main.reloadConfig();
+            main.getRewardManager().load();
+            main.getMessages().load();
+            main.getMenus().load();
+            main.getScoreboardConfig().load();
+            main.getLobbyItemsConfig().load();
+            main.getLevelingManager().reload();
+            main.getPartyManager().reload();
+            main.loadServerLobby();
+            main.loadGameContent();
+            main.getTopManager().reload();
+            arenaManager.resetAll();
+            arenaManager.load();
+            send(sender, Messages.tr("command.reloaded"));
+            return true;
+        }
+
+        // Everything below acts from a location or on a player: no console.
+        if (!(sender instanceof Player)) {
+            send(sender, Messages.tr("command.ingame_only"));
+            return true;
+        }
+        Player player = (Player) sender;
+
+        if ("join".equals(subcommand)) {
+            if (!checkPermission(player, JOIN)) {
+                return true;
+            }
+            if (args.length != 2) {
+                send(player, usage("join " + Messages.tr("command.args.arena")));
+                return true;
+            }
+            joinArena(player, args[1]);
+            return true;
+        }
+        if ("randomjoin".equals(subcommand)) {
+            if (!checkPermission(player, JOIN)) {
+                return true;
+            }
+            Arena current = arenaManager.getArenaOf(player);
+            if (current != null) {
+                send(player, Messages.tr("command.already_in_arena", "arena", current.getName()));
+                return true;
+            }
+            // Party gate: a party member who is not the leader cannot join a
+            // game on their own (the leader joining moves the whole party in).
+            if (main.getPartyManager() != null) {
+                String partyBlock = main.getPartyManager().joinGateMessage(player);
+                if (partyBlock != null) {
+                    send(player, partyBlock);
+                    return true;
+                }
+            }
+            // Party leader: resolve an arena + team that fits the WHOLE party
+            // on the same team (falls back to another joinable arena if none of
+            // the chosen one's teams fits). A solo player (no party) just takes
+            // the fullest joinable arena.
+            com.thetowers.party.PartyManager pm = main.getPartyManager();
+            Arena picked = null;
+            String partyTeam = null;
+            if (pm != null && pm.isPartyLeader(player)) {
+                com.thetowers.party.PartyManager.PartyTarget target = pm.findPartyTarget(player, null);
+                if (target == null) {
+                    // No joinable arena can fit the whole party on one team.
+                    com.thetowers.compat.Compat.resetPlayer(player, org.bukkit.GameMode.ADVENTURE);
+                    main.returnToLobby(player);
+                    send(player, Messages.tr("command.randomjoin_no_game"));
+                    player.sendMessage(pm.getConfig().prefix() + pm.getConfig().msg("join-no-fit"));
+                    return true;
+                }
+                picked = target.arena;
+                partyTeam = target.team;
+            } else {
+                picked = arenaManager.bestJoinableArena();
+            }
+            if (picked == null) {
+                // No waiting arena with a free slot: send the player to the lobby.
+                com.thetowers.compat.Compat.resetPlayer(player, org.bukkit.GameMode.ADVENTURE);
+                main.returnToLobby(player);
+                send(player, Messages.tr("command.randomjoin_no_game"));
+                return true;
+            }
+            String problem = picked.join(player);
+            if (problem != null) {
+                send(player, Messages.tr("command.join_failed", "reason", problem));
+            } else {
+                send(player, Messages.tr("command.joined_arena", "arena", picked.getName()));
+                if (partyTeam != null) {
+                    pm.onLeaderJoinedArena(player, picked, partyTeam);
+                }
+            }
+            return true;
+        }
+        if ("leave".equals(subcommand)) {
+            Arena current = arenaManager.getArenaOf(player);
+            if (current == null) {
+                send(player, Messages.tr("command.not_in_arena"));
+            } else {
+                current.leave(player, true);
+                send(player, Messages.tr("command.left_arena", "arena", current.getName()));
+            }
+            return true;
+        }
+        if ("kit".equals(subcommand)) {
+            // With no argument: selection menu; "buy": Vault purchase;
+            // otherwise direct selection by name. All usable from the main
+            // lobby.
+            if (args.length < 2) {
+                main.getKitMenu().open(player);
+                return true;
+            }
+            if ("buy".equalsIgnoreCase(args[1])) {
+                if (args.length < 3) {
+                    send(player, usage("kit buy <kit>"));
+                    return true;
+                }
+                KitDefinition toBuy = main.getKitManager().getKit(args[2]);
+                if (toBuy == null) {
+                    send(player, Messages.tr("kits.unknown", "name", args[2]));
+                } else {
+                    main.getKitMenu().choose(player, toBuy);
+                }
+                return true;
+            }
+            KitDefinition kit = main.getKitManager().getKit(args[1]);
+            if (kit == null) {
+                send(player, Messages.tr("kits.unknown", "name", args[1]));
+            } else {
+                main.getKitMenu().choose(player, kit);
+            }
+            return true;
+        }
+
+        if ("spectate".equals(subcommand)) {
+            if (!checkPermission(player, SPECTATE)) {
+                return true;
+            }
+            if (args.length != 2) {
+                send(player, usage("spectate " + Messages.tr("command.args.arena")));
+                return true;
+            }
+            Arena watched = arenaManager.getArena(args[1]);
+            if (watched == null) {
+                send(player, Messages.tr("command.arena_not_found", "name", args[1]));
+                return true;
+            }
+            Arena inside = arenaManager.getArenaOf(player);
+            if (inside != null) {
+                send(player, Messages.tr("command.already_in_arena", "arena", inside.getName()));
+                return true;
+            }
+            String problem = watched.spectate(player);
+            if (problem != null) {
+                send(player, Messages.tr("command.join_failed", "reason", problem));
+            } else {
+                send(player, Messages.tr("spectator.joined", "arena", watched.getName()));
+            }
+            return true;
+        }
+        if ("chat".equals(subcommand)) {
+            if (args.length != 2 || !("team".equalsIgnoreCase(args[1]) || "all".equalsIgnoreCase(args[1]))) {
+                send(player, usage("chat <team|all>"));
+                return true;
+            }
+            boolean all = "all".equalsIgnoreCase(args[1]);
+            main.getChatListeners().setDefaultAll(player, all);
+            String mode = all ? main.getChatModeAll() : main.getChatModeTeam();
+            send(player, Compat.color(mode.replace("%prefix%", main.getChatAllPrefix())));
+            return true;
+        }
+
+        // From here on, everything is administrative.
+        if (!checkPermission(player, ADMIN)) {
+            return true;
+        }
+
+        // Shortcut /tt <arena> = /tt edit <arena>. Subcommands stay
+        // priority: an arena named "start" opens with /tt edit start.
+        if (!ADMIN_SUBCOMMANDS.contains(subcommand)) {
+            Arena target = args.length == 1 ? arenaManager.getArena(args[0]) : null;
+            if (target == null) {
+                send(player, Messages.tr("command.unknown_subcommand"));
+            } else {
+                main.getConfigMenu().openEdit(player, target.getName());
+            }
+            return true;
+        }
+
+        if ("edit".equals(subcommand)) {
+            if (args.length >= 2) {
+                Arena target = arenaManager.getArena(args[1]);
+                if (target == null) {
+                    send(player, Messages.tr("command.arena_not_found", "name", args[1]));
+                } else {
+                    main.getConfigMenu().openEdit(player, target.getName());
+                }
+            } else {
+                main.getConfigMenu().openList(player);
+            }
+            return true;
+        }
+        if ("cancel".equals(subcommand)) {
+            if (main.getPlacements().isPlacing(player)) {
+                main.getPlacements().cancel(player);
+            } else if (!main.getArenaNaming().cancel(player)) {
+                send(player, Messages.tr("config.place.not_placing"));
+            }
+            return true;
+        }
+        if ("setlobby".equals(subcommand)) {
+            main.setServerLobby(player.getLocation());
+            send(player, Messages.tr("command.server_lobby_set"));
+            return true;
+        }
+        if ("create".equals(subcommand)) {
+            if (args.length != 2) {
+                send(player, usage("create " + Messages.tr("command.args.arena")));
+            } else if (!ArenaManager.isValidName(args[1])) {
+                send(player, Messages.tr("command.arena_invalid_name"));
+            } else if (!arenaManager.createArena(args[1])) {
+                send(player, Messages.tr("command.arena_exists"));
+            } else {
+                send(player, Messages.tr("command.arena_created", "name", args[1]));
+            }
+            return true;
+        }
+        if ("delete".equals(subcommand)) {
+            if (args.length != 2) {
+                send(player, usage("delete " + Messages.tr("command.args.arena")));
+            } else if (!arenaManager.deleteArena(args[1])) {
+                send(player, Messages.tr("command.arena_none_named"));
+            } else {
+                send(player, Messages.tr("command.arena_deleted", "arena", args[1]));
+            }
+            return true;
+        }
+
+        // All the remaining subcommands take an arena name.
+        if (args.length < 2) {
+            send(player, usage(subcommand + " " + Messages.tr("command.args.arena_etc")));
+            return true;
+        }
+        Arena arena = arenaManager.getArena(args[1]);
+        if (arena == null) {
+            send(player, Messages.tr("command.arena_not_found", "name", args[1]));
+            return true;
+        }
+
+        if ("setarenalobby".equals(subcommand)) {
+            arena.setLobby(player.getLocation());
+            arenaManager.save();
+            send(player, Messages.tr("command.arena_lobby_set", "arena", arena.getName()));
+            return true;
+        }
+
+        if (TEAM_SUBCOMMANDS.contains(subcommand)) {
+            handleTeamSetting(player, arena, subcommand, args);
+            return true;
+        }
+
+        if ("addgenerator".equals(subcommand)) {
+            if (args.length != 3) {
+                send(player, usage("addgenerator " + Messages.tr("command.args.arena_type")));
+                return true;
+            }
+            String type = args[2].toLowerCase(Locale.ROOT);
+            if (!main.getGeneratorTypes().containsKey(type)) {
+                send(player, Messages.tr("command.unknown_generator",
+                        "types", main.getGeneratorTypes().keySet().toString()));
+                return true;
+            }
+            arena.addGenerator(type, player.getLocation());
+            arenaManager.save();
+            send(player, Messages.tr("command.generator_added", "type", type, "arena", arena.getName()));
+            return true;
+        }
+        if ("cleargenerators".equals(subcommand)) {
+            int removed = arena.clearGenerators(args.length >= 3 ? args[2] : null);
+            arenaManager.save();
+            send(player, Messages.tr("command.generators_cleared", "count", removed));
+            return true;
+        }
+
+        if ("spectators".equals(subcommand)) {
+            if (args.length != 3 || !("on".equalsIgnoreCase(args[2]) || "off".equalsIgnoreCase(args[2]))) {
+                send(player, usage("spectators " + Messages.tr("command.args.arena") + " <on|off>"));
+                return true;
+            }
+            arena.setAllowSpectators("on".equalsIgnoreCase(args[2]));
+            arenaManager.save();
+            send(player, Messages.tr(arena.isAllowSpectators() ? "command.spectators_on" : "command.spectators_off",
+                    "arena", arena.getName()));
+            return true;
+        }
+
+        if ("bows".equals(subcommand)) {
+            if (args.length != 3 || !("on".equalsIgnoreCase(args[2]) || "off".equalsIgnoreCase(args[2]))) {
+                send(player, usage("bows " + Messages.tr("command.args.arena") + " <on|off>"));
+                return true;
+            }
+            arena.setAllowBows("on".equalsIgnoreCase(args[2]));
+            arenaManager.save();
+            send(player, Messages.tr(arena.isAllowBows() ? "command.bows_on" : "command.bows_off"));
+            return true;
+        }
+
+        if ("setminplayers".equals(subcommand) || "setmaxplayers".equals(subcommand)
+                || "setteams".equals(subcommand) || "setplayersperteam".equals(subcommand)
+                || "setpoints".equals(subcommand) || "setduration".equals(subcommand)) {
+            if (args.length != 3) {
+                send(player, usage(subcommand + " " + Messages.tr("command.args.arena_number")));
+                return true;
+            }
+            Integer value = parseInt(player, args[2]);
+            if (value != null) {
+                applyNumericSetting(player, arena, subcommand, value.intValue());
+            }
+            return true;
+        }
+
+        if ("save".equals(subcommand)) {
+            String problem = arena.validate();
+            if (problem != null) {
+                send(player, Messages.tr("command.arena_incomplete", "problem", problem));
+                return true;
+            }
+            arenaManager.save();
+            send(player, Messages.tr("command.arena_saved", "arena", arena.getName()));
+            return true;
+        }
+        if ("info".equals(subcommand)) {
+            sendInfo(player, arena);
+            return true;
+        }
+        if ("start".equals(subcommand)) {
+            startArena(player, arena);
+            return true;
+        }
+        if ("stop".equals(subcommand)) {
+            if (!arena.isRunning() && !arena.isState(State.STARTING)) {
+                send(player, Messages.tr("command.no_game_running"));
+            } else if (arena.isState(State.STARTING)) {
+                // No game yet: simply empty the arena.
+                arena.reset();
+                send(player, Messages.tr("command.game_stopped"));
+            } else {
+                arena.end(null);
+                send(player, Messages.tr("command.game_stopped"));
+            }
+            return true;
+        }
+
+        send(player, Messages.tr("command.unknown_subcommand"));
+        return true;
+    }
+
+    // ================= Team settings =================
+
+    private void handleTeamSetting(Player player, Arena arena, String subcommand, String[] args) {
+        boolean clear = "clearzone".equals(subcommand);
+        int expected = clear ? 4 : 3;
+        if (args.length != expected) {
+            send(player, usage(subcommand + " " + Messages.tr(clear
+                    ? "command.args.arena_team_zone" : "command.args.arena_team")));
+            return;
+        }
+        String team = Arena.matchTeamName(args[2]);
+        if (team == null) {
+            send(player, Messages.tr("command.unknown_team", "teams", Arena.teamChoices().toString()));
+            return;
+        }
+
+        if ("setspawn".equals(subcommand)) {
+            arena.setSpawn(team, player.getLocation());
+            arenaManager.save();
+            send(player, Messages.tr("command.spawn_set", "color", Arena.colorOf(team), "team", Arena.displayName(team)));
+            return;
+        }
+        if (clear) {
+            String zone = args[3].toLowerCase(Locale.ROOT);
+            if ("spawnzone".equals(zone)) {
+                arena.setSpawnZone(team, null);
+            } else if ("chestzone".equals(zone)) {
+                arena.setChestZone(team, null);
+            } else {
+                send(player, usage("clearzone " + Messages.tr("command.args.arena_team_zone")));
+                return;
+            }
+            arenaManager.save();
+            send(player, Messages.tr("config.team.zone_cleared"));
+            return;
+        }
+
+        PlacementSession.Kind kind = "setpool".equals(subcommand) ? PlacementSession.Kind.POOL
+                : "setspawnzone".equals(subcommand) ? PlacementSession.Kind.SPAWN_ZONE
+                : PlacementSession.Kind.CHEST_ZONE;
+        main.getPlacements().start(player, new PlacementSession(arena.getName(), kind, team, null));
+    }
+
+    // ================= Actions =================
+
+    private void joinArena(Player player, String arenaName) {
+        Arena arena = arenaManager.getArena(arenaName);
+        if (arena == null) {
+            send(player, Messages.tr("command.arena_not_found", "name", arenaName));
+            return;
+        }
+        Arena current = arenaManager.getArenaOf(player);
+        if (current != null) {
+            send(player, Messages.tr("command.already_in_arena", "arena", current.getName()));
+            return;
+        }
+        // Party gate: a party member who is not the leader cannot join a game
+        // on their own (the leader joining moves the whole party in).
+        if (main.getPartyManager() != null) {
+            String partyBlock = main.getPartyManager().joinGateMessage(player);
+            if (partyBlock != null) {
+                send(player, partyBlock);
+                return;
+            }
+        }
+        // Party leader: the chosen arena is tried first; if none of its teams
+        // fits the whole party on the same team, the resolver falls back to
+        // another joinable arena (the party is NEVER split). Solo players just
+        // join the chosen arena.
+        com.thetowers.party.PartyManager pm = main.getPartyManager();
+        Arena target = arena;
+        String partyTeam = null;
+        if (pm != null && pm.isPartyLeader(player)) {
+            com.thetowers.party.PartyManager.PartyTarget t = pm.findPartyTarget(player, arena);
+            if (t == null) {
+                player.sendMessage(pm.getConfig().prefix() + pm.getConfig().msg("join-no-fit"));
+                return;
+            }
+            target = t.arena;
+            partyTeam = t.team;
+            if (!target.getName().equals(arena.getName())) {
+                // The chosen arena could not fit the party: moved to another.
+                player.sendMessage(pm.getConfig().prefix() + pm.getConfig().msg("join-moved",
+                        "chosen", arena.getName(), "arena", target.getName()));
+            }
+        }
+        String problem = target.join(player);
+        if (problem != null) {
+            send(player, Messages.tr("command.join_failed", "reason", problem));
+        } else {
+            send(player, Messages.tr("command.joined_arena", "arena", target.getName()));
+            if (partyTeam != null) {
+                pm.onLeaderJoinedArena(player, target, partyTeam);
+            }
+        }
+    }
+
+    /**
+     * The most filled WAITING/STARTING arena is picked by
+     * {@link ArenaManager#bestJoinableArena()}: randomjoin and the random
+     * sign use exactly the same logic.
+     */
+
+    private void startArena(Player player, Arena arena) {
+        if (arena.isRunning() || arena.isState(State.FINISH)) {
+            send(player, Messages.tr("command.game_already_running"));
+            return;
+        }
+        String problem = arena.validate();
+        if (problem != null) {
+            send(player, Messages.tr("command.arena_incomplete", "problem", problem));
+            return;
+        }
+        if (arena.getPlayerCount() < 2) {
+            send(player, Messages.tr("command.need_two_players"));
+            return;
+        }
+        arena.start();
+        send(player, Messages.tr("command.game_started", "arena", arena.getName()));
+    }
+
+    private void applyNumericSetting(Player player, Arena arena, String subcommand, int value) {
+        if (value <= 0) {
+            send(player, Messages.tr("command.value_positive"));
+            return;
+        }
+        if ("setminplayers".equals(subcommand)) {
+            arena.setMinPlayers(value);
+            send(player, Messages.tr("command.min_players_set", "value", value));
+        } else if ("setmaxplayers".equals(subcommand)) {
+            arena.setMaxPlayers(value);
+            send(player, Messages.tr("command.max_players_set", "value", value));
+        } else if ("setteams".equals(subcommand)) {
+            if (value < 2 || value > 4) {
+                send(player, Messages.tr("command.teams_range"));
+                return;
+            }
+            arena.setTeamCount(value);
+            send(player, Messages.tr("command.teams_set", "value", value));
+        } else if ("setplayersperteam".equals(subcommand)) {
+            arena.setPlayersPerTeam(value);
+            send(player, Messages.tr("command.players_per_team_set", "value", value));
+        } else if ("setpoints".equals(subcommand)) {
+            arena.setPointsToWin(value);
+            send(player, Messages.tr("command.points_set", "value", arena.getPointsToWin()));
+        } else {
+            arena.setDuration(value * 60);
+            send(player, Messages.tr("command.duration_set", "value", arena.getDuration() / 60));
+        }
+        arenaManager.save();
+    }
+
+    private void listArenas(CommandSender sender) {
+        List<String> names = arenaManager.getArenaNames();
+        if (names.isEmpty()) {
+            send(sender, Messages.tr("command.no_arenas"));
+            return;
+        }
+        send(sender, Messages.tr("command.arenas_header", "count", names.size()));
+        for (Arena arena : arenaManager.getArenas()) {
+            String status = arena.isConfigured()
+                    ? ChatColor.GREEN + arena.getState().name()
+                    : ChatColor.RED + Messages.tr("command.status_incomplete");
+            sender.sendMessage(Messages.tr("command.arena_list_entry",
+                    "name", arena.getName(), "status", status,
+                    "current", arena.getPlayerCount(), "max", arena.getMaxPlayers()));
+        }
+    }
+
+    private void sendInfo(Player player, Arena arena) {
+        send(player, Messages.tr("command.info_header", "arena", arena.getName()));
+        player.sendMessage(Messages.tr("command.info_state", "state", arena.getState()));
+        player.sendMessage(Messages.tr("command.info_players",
+                "current", arena.getPlayerCount(), "max", arena.getMaxPlayers(),
+                "min", arena.getMinPlayers()));
+        player.sendMessage(Messages.tr("command.info_teams",
+                "teams", arena.getTeamCount(), "per", arena.getPlayersPerTeam()));
+        player.sendMessage(Messages.tr("command.info_rules",
+                "points", arena.getPointsToWin(), "minutes", arena.getDuration() / 60,
+                "bows", Messages.tr(arena.isAllowBows() ? "config.state.on" : "config.state.off")));
+        player.sendMessage(Messages.tr("command.info_lobby", "value", format(arena.getLobby())));
+
+        for (String team : arena.activeTeams()) {
+            player.sendMessage(Messages.tr("command.info_team",
+                    "color", Arena.colorOf(team), "team", Arena.displayName(team),
+                    "spawn", format(arena.getSpawns().get(team)),
+                    "pool", format(arena.getPools().get(team)),
+                    "spawnzone", format(arena.getSpawnZones().get(team)),
+                    "chestzone", format(arena.getChestZones().get(team))));
+        }
+
+        StringBuilder generators = new StringBuilder();
+        for (GeneratorSpot spot : arena.getGenerators()) {
+            if (generators.indexOf(spot.getType()) < 0) {
+                if (generators.length() > 0) {
+                    generators.append(", ");
+                }
+                generators.append(spot.getType()).append(" x").append(arena.countGenerators(spot.getType()));
+            }
+        }
+        player.sendMessage(Messages.tr("command.info_generators", "value",
+                generators.length() == 0 ? Messages.tr("command.none") : generators.toString()));
+
+        String problem = arena.validate();
+        player.sendMessage(problem == null
+                ? Messages.tr("command.info_ready")
+                : Messages.tr("command.info_problem", "problem", problem));
+    }
+
+    private String format(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return ChatColor.DARK_GRAY + Messages.tr("command.undefined");
+        }
+        return ChatColor.WHITE + location.getWorld().getName() + " " + location.getBlockX() + ", "
+                + location.getBlockY() + ", " + location.getBlockZ();
+    }
+
+    private String format(Cuboid zone) {
+        return zone == null
+                ? ChatColor.DARK_GRAY + Messages.tr("command.undefined")
+                : ChatColor.WHITE + zone.describe();
+    }
+
+    // ================= Statistics =================
+
+    private void showStats(final CommandSender sender, String name) {
+        // An online player: prefer the live values of the cache (the
+        // current game is only written at the end).
+        Player online = Bukkit.getPlayerExact(name);
+        if (online != null) {
+            PlayerStats cached = main.getStatsManager().getCached(online.getUniqueId());
+            if (cached != null) {
+                displayStats(sender, cached);
+                return;
+            }
+        }
+        main.getStatsManager().lookupByName(name, new Consumer<PlayerStats>() {
+            @Override
+            public void accept(PlayerStats stats) {
+                if (stats == null) {
+                    send(sender, Messages.tr("command.no_stats_player"));
+                } else {
+                    displayStats(sender, stats);
+                }
+            }
+        });
+    }
+
+    private void displayStats(CommandSender sender, PlayerStats stats) {
+        send(sender, Messages.tr("command.stats_header", "name", stats.getName()));
+        sender.sendMessage(Messages.tr("command.stats_games", "games", stats.getGames()));
+        sender.sendMessage(Messages.tr("command.stats_wins_losses",
+                "wins", stats.getWins(), "losses", stats.getLosses()));
+        sender.sendMessage(Messages.tr("command.stats_kd",
+                "kills", stats.getKills(), "deaths", stats.getDeaths(),
+                "kd", String.format(Locale.US, "%.2f", stats.kd())));
+        sender.sendMessage(Messages.tr("command.stats_points", "points", stats.getPoints()));
+    }
+
+    private void showTop(final CommandSender sender, final String stat, final String period) {
+        if (!StatsStorage.isAnyIntColumn(stat)) {
+            send(sender, Messages.tr("command.unknown_stat",
+                    "choices", Arrays.toString(StatsStorage.COLUMNS)));
+            return;
+        }
+        boolean all = period == null || "all".equals(period);
+        if (!all && !"week".equals(period) && !"month".equals(period)) {
+            send(sender, Messages.tr("command.unknown_period", "value", period));
+            return;
+        }
+        // Extended columns (blocks_placed, ...) are career-only: no per-period
+        // tracking. Reject the week/month variants for them.
+        if (!all && !StatsStorage.isColumn(stat)) {
+            send(sender, Messages.tr("command.unknown_period", "value", period));
+            return;
+        }
+        if (all) {
+            main.getStatsManager().top(stat, 10, new Consumer<List<PlayerStats>>() {
+                @Override
+                public void accept(List<PlayerStats> list) {
+                    if (list.isEmpty()) {
+                        send(sender, Messages.tr("command.no_stats"));
+                        return;
+                    }
+                    send(sender, Messages.tr("command.top_header", "stat", stat));
+                    int rank = 1;
+                    for (PlayerStats stats : list) {
+                        sender.sendMessage(Messages.tr("command.top_entry",
+                                "rank", rank, "name", stats.getName(), "value", stats.value(stat)));
+                        rank++;
+                    }
+                }
+            });
+            return;
+        }
+        // Current period (day or ISO week): kept in memory since server
+        // startup, counted from the first event of the period.
+        main.getStatsManager().topPeriodic(period, stat, 10, new Consumer<List<PlayerStats>>() {
+            @Override
+            public void accept(List<PlayerStats> list) {
+                if (list.isEmpty()) {
+                    send(sender, Messages.tr("command.no_stats_period",
+                            "period", Messages.tr("command.period." + period)));
+                    return;
+                }
+                send(sender, Messages.tr("command.top_header_period", "stat", stat,
+                        "period", Messages.tr("command.period." + period),
+                        "key", StatsManager.periodKeyOf(period)));
+                int rank = 1;
+                for (PlayerStats stats : list) {
+                    sender.sendMessage(Messages.tr("command.top_entry",
+                            "rank", rank, "name", stats.getName(), "value", stats.value(stat)));
+                    rank++;
+                }
+            }
+        });
+    }
+
+    // ================= Coins (admin) =================
+
+    private void handleCoins(CommandSender sender, String[] args) {
+        if (main.getCoinsManager() == null) {
+            send(sender, Messages.tr("coins.no_economy"));
+            return;
+        }
+        if (args.length < 2) {
+            send(sender, Messages.tr("coins.usage"));
+            return;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        if ("reset".equals(action)) {
+            if (args.length != 3) {
+                send(sender, usage("coins reset " + Messages.tr("command.args.player")));
+                return;
+            }
+            org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+            long balance = main.getCoinsManager().reset(target);
+            send(sender, Messages.tr("coins.reset", "player", nameOf(target),
+                    "amount", coins(balance), "balance", coins(balance), "currency", currency(balance)));
+            return;
+        }
+        if ("add".equals(action) || "remove".equals(action) || "set".equals(action)) {
+            if (args.length != 4) {
+                send(sender, usage("coins " + action + " " + Messages.tr("command.args.player") + " <amount>"));
+                return;
+            }
+            Long amount = parseLong(sender, args[3]);
+            if (amount == null) {
+                return;
+            }
+            org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+            long balance;
+            String key;
+            if ("add".equals(action)) {
+                balance = main.getCoinsManager().add(target, amount.longValue());
+                key = "coins.added";
+            } else if ("remove".equals(action)) {
+                balance = main.getCoinsManager().remove(target, amount.longValue());
+                key = "coins.removed";
+            } else {
+                main.getCoinsManager().setBalance(target, amount.longValue());
+                balance = amount.longValue();
+                key = "coins.set";
+            }
+            send(sender, Messages.tr(key, "player", nameOf(target),
+                    "amount", coins(amount.longValue()), "balance", coins(balance), "currency", currency(balance)));
+            return;
+        }
+        send(sender, Messages.tr("coins.usage"));
+    }
+
+    /** Name of an offline player, falling back to the given string. */
+    private static String nameOf(org.bukkit.OfflinePlayer target) {
+        String name = target == null ? null : target.getName();
+        return name == null ? "?" : name;
+    }
+
+    /** Formats a coin amount as an integer with a thousands separator (no symbol). */
+    private String coins(long amount) {
+        return com.thetowers.coins.CoinsCommand.formatAmount(main, amount);
+    }
+
+    /** Plural or singular currency name, depending on the amount. */
+    private String currency(long amount) {
+        boolean plural = amount != 1L;
+        return main.getConfig().getString(plural ? "coins.currency-plural" : "coins.currency-singular",
+                plural ? "Coins" : "Coin");
+    }
+
+    /** Parses a long without ever throwing. */
+    private Long parseLong(CommandSender sender, String raw) {
+        try {
+            return Long.valueOf(Long.parseLong(raw));
+        } catch (NumberFormatException e) {
+            send(sender, Messages.tr("coins.invalid_amount", "value", raw));
+            return null;
+        }
+    }
+
+    private void sendHelp(CommandSender sender) {
+        send(sender, Messages.tr("command.help_header"));
+        sender.sendMessage(Messages.tr("command.help_join"));
+        sender.sendMessage(Messages.tr("command.help_randomjoin"));
+        sender.sendMessage(Messages.tr("command.help_leave"));
+        sender.sendMessage(Messages.tr("command.help_list"));
+        sender.sendMessage(Messages.tr("command.help_stats"));
+        sender.sendMessage(Messages.tr("command.help_top"));
+        sender.sendMessage(Messages.tr("command.help_kit"));
+        sender.sendMessage(Messages.tr("command.help_kit_buy"));
+        sender.sendMessage(Messages.tr("command.help_spectate"));
+        sender.sendMessage(Messages.tr("command.help_chat"));
+        if (!sender.hasPermission(ADMIN)) {
+            return;
+        }
+        sender.sendMessage(Messages.tr("command.help_admin_header"));
+        sender.sendMessage(Messages.tr("command.help_edit"));
+        sender.sendMessage(Messages.tr("command.help_setlobby"));
+        sender.sendMessage(Messages.tr("command.help_create_delete"));
+        sender.sendMessage(Messages.tr("command.help_setarenalobby"));
+        sender.sendMessage(Messages.tr("command.help_setspawn"));
+        sender.sendMessage(Messages.tr("command.help_zones"));
+        sender.sendMessage(Messages.tr("command.help_clearzone"));
+        sender.sendMessage(Messages.tr("command.help_generators"));
+        sender.sendMessage(Messages.tr("command.help_setteams"));
+        sender.sendMessage(Messages.tr("command.help_setplayers"));
+        sender.sendMessage(Messages.tr("command.help_rules"));
+        sender.sendMessage(Messages.tr("command.help_spectators"));
+        sender.sendMessage(Messages.tr("command.help_save"));
+        sender.sendMessage(Messages.tr("command.help_reload"));
+        sender.sendMessage(Messages.tr("command.help_removekit"));
+    }
+
+    // ================= Utilities =================
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(Main.PREFIX + message);
+    }
+
+    private String usage(String form) {
+        return Messages.tr("command.usage", "form", form);
+    }
+
+    private boolean checkPermission(CommandSender sender, String permission) {
+        if (sender.hasPermission(permission)) {
+            return true;
+        }
+        send(sender, Messages.tr("command.no_permission", "permission", permission));
+        return false;
+    }
+
+    /** Parses an integer without ever throwing. */
+    private Integer parseInt(CommandSender sender, String raw) {
+        try {
+            return Integer.valueOf(Integer.parseInt(raw));
+        } catch (NumberFormatException e) {
+            send(sender, Messages.tr("command.not_integer", "value", raw));
+            return null;
+        }
+    }
+
+    // ================= Tab completion =================
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            List<String> options = new ArrayList<String>(PLAYER_SUBCOMMANDS);
+            if (sender.hasPermission(ADMIN)) {
+                options.addAll(ADMIN_SUBCOMMANDS);
+                options.addAll(arenaManager.getArenaNames());
+            }
+            return filter(options, args[0]);
+        }
+        String sub = args[0].toLowerCase(Locale.ROOT);
+
+        if (args.length == 2) {
+            if ("top".equals(sub)) {
+                return filter(Arrays.asList(StatsStorage.COLUMNS), args[1]);
+            }
+            if ("coins".equals(sub)) {
+                return filter(Arrays.asList("add", "remove", "set", "reset"), args[1]);
+            }
+            if ("kit".equals(sub)) {
+                List<String> ids = new ArrayList<String>();
+                ids.add("buy");
+                for (KitDefinition kit : main.getKitManager().getKits()) {
+                    ids.add(kit.getId());
+                }
+                return filter(ids, args[1]);
+            }
+            if ("givekit".equals(sub)) {
+                List<String> ids = new ArrayList<String>();
+                for (KitDefinition kit : main.getKitManager().getKits()) {
+                    ids.add(kit.getId());
+                }
+                return filter(ids, args[1]);
+            }
+            if ("stats".equals(sub)) {
+                return filter(onlinePlayerNames(), args[1]);
+            }
+            if ("chat".equals(sub)) {
+                return filter(Arrays.asList("team", "all"), args[1]);
+            }
+            if (!"setlobby".equals(sub) && !"create".equals(sub) && !"help".equals(sub)
+                    && !"leave".equals(sub) && !"list".equals(sub)
+                    && !"randomjoin".equals(sub)
+                    && !"cancel".equals(sub) && !"reload".equals(sub)) {
+                return filter(arenaManager.getArenaNames(), args[1]);
+            }
+        }
+
+        if (args.length == 3) {
+            if ("coins".equals(sub)) {
+                return filter(onlinePlayerNames(), args[2]);
+            }
+            if ("givekit".equals(sub)) {
+                return filter(onlinePlayerNames(), args[2]);
+            }
+            if (TEAM_SUBCOMMANDS.contains(sub)) {
+                return filter(Arena.teamChoices(), args[2]);
+            }
+            if ("addgenerator".equals(sub) || "cleargenerators".equals(sub)) {
+                return filter(new ArrayList<String>(main.getGeneratorTypes().keySet()), args[2]);
+            }
+            if ("bows".equals(sub) || "spectators".equals(sub)) {
+                return filter(Arrays.asList("on", "off"), args[2]);
+            }
+            if ("top".equals(sub)) {
+                return filter(Arrays.asList("all", "week", "month"), args[2]);
+            }
+            if ("kit".equals(sub) && "buy".equalsIgnoreCase(args[1])) {
+                List<String> ids = new ArrayList<String>();
+                for (KitDefinition kit : main.getKitManager().getKits()) {
+                    ids.add(kit.getId());
+                }
+                return filter(ids, args[2]);
+            }
+        }
+
+        if (args.length == 4 && "clearzone".equals(sub)) {
+            return filter(Arrays.asList("spawnzone", "chestzone"), args[3]);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private List<String> onlinePlayerNames() {
+        List<String> names = new ArrayList<String>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            names.add(player.getName());
+        }
+        return names;
+    }
+
+    private List<String> filter(List<String> options, String prefix) {
+        List<String> matches = new ArrayList<String>();
+        String lower = prefix.toLowerCase(Locale.ROOT);
+        for (String option : options) {
+            if (option.toLowerCase(Locale.ROOT).startsWith(lower)) {
+                matches.add(option);
+            }
+        }
+        Collections.sort(matches);
+        return matches;
+    }
+}

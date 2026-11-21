@@ -1,0 +1,159 @@
+# ==========================================================
+#  TheTowers - Leveling system (separate module)
+# ==========================================================
+# Everything level/EXP lives here: settings, the experience curve, the level
+# display formats, the progress bar, number formatting, level-up rewards AND
+# every message the module sends. Nothing leveling-related goes into
+# messages.yml, so this whole subsystem can be tuned or rewritten without
+# touching the central TheTowers code.
+#
+# The module is driven only by commands: /leveling (players + admins) and the
+# on-kill / on-death sections of rewards.yml (which fire /leveling addexp as
+# the console). The towers game never calls into it directly.
+#
+# Reload: /tt reload  (or /leveling reload).
+
+# Master toggle. When false, /leveling refuses operations and placeholders
+# resolve to empty text.
+enabled: true
+
+# Starting values for a brand-new player, and the floor they can be reduced to.
+starting:
+  level: 1
+  experience: 0
+
+# Hard cap on levels. 0 = unlimited. Default 100.
+maximum:
+  level: 100
+
+# Experience required to advance from one level to the next.
+#   general-formula: evaluated for every level that has no per-level override.
+#     Variables: {level} (the level being computed), {max_level}, {min_level},
+#     {min_exp}. Operators: + - * / % ^ (and parentheses). Functions: sqrt,
+#     abs, floor, ceil, round, sin, cos, tan, log, exp, max(a,b), min(a,b),
+#     pow(a,b). The result is rounded to a whole number (integers only).
+#   per-level: overrides for specific levels. A plain number or a formula.
+experience:
+  general-formula: '100 + ({level} - 1) * 50'
+  per-level:
+    1: 100
+    2: 180
+    3: '250 + {level} * 10'
+
+# Level display formats, applied by RANGE. The FIRST range that contains the
+# player's level wins (top to bottom). {level} = the raw level number.
+#   %thetowers_level%        -> the raw number (e.g. 7)
+#   %thetowers_level_format% -> the matched format (e.g. &8[&a7&2Ω&8])
+level-formats:
+  default: '&7[%level%]'
+  ranges:
+    - range: '1-25'
+      format: '&8[&a%level%&2Ω&8]'
+    - range: '26-50'
+      format: '&8[&6%level%&eΩ&8]'
+    - range: '51-100'
+      format: '&8[&b%level%&3Ω&8]'
+
+# Progress bar shown by %thetowers_exp_progress_bar% (the bar ONLY: brackets +
+# filled/empty chars + their colors). The percentage is a SEPARATE placeholder,
+# %thetowers_exp_progress_percentage%, which you place right after the bar in
+# the scoreboard line.
+progress-bar:
+  length: 8
+  filled-color: '&2&m'
+  empty-color: '&7&m'
+  bracket-open: '&8['
+  bracket-close: '&8]'
+  filled-char: '='
+  empty-char: '='
+  # When true, the %thetowers_exp_progress_percentage% placeholder renders the
+  # percentage (percent-format below); when false it is empty (bar only). The
+  # bar itself NEVER includes the percentage. Default true.
+  show-percent: true
+  percent-format: '&7{percent}%'
+
+# Number formatting for EXP values.
+#   %thetowers_exp%                       -> raw integer (e.g. 1340)
+#   %thetowers_exp_formatted%             -> grouped (e.g. 1,340)
+#   %thetowers_exp_formatted_short%       -> abbreviated (e.g. 1,3k)
+#   (same triple for exp_required)
+# The thousands separator and the short-form decimal separator are both
+# configurable; the defaults (comma in both roles) reproduce 1,340 / 1,3k.
+formatting:
+  thousands-separator: ','
+  short-decimal-separator: ','
+  short-decimals: 1
+  abbreviations:
+    - threshold: 1000000000
+      suffix: 'B'
+    - threshold: 1000000
+      suffix: 'M'
+    - threshold: 1000
+      suffix: 'k'
+
+# Rewards executed when a player REACHES a level (on level-up). Each entry
+# lists the levels it covers (a range "1-100", a comma list "9, 10, 11", a YAML
+# list, or a single number) and the commands/messages to run. Commands support
+# [player] / [console] prefixes (default console); messages support:
+#   [player]    chat line
+#   [title]     a title (use <n> to split title/subtitle); short timing
+#   [actionbar] an action-bar line
+#   [sound]     plays a sound: "NAME pitch volume" (NAME is an XSound constant,
+#               e.g. ENTITY_PLAYER_LEVELUP; pitch/volume default to 1)
+# Placeholders: {player}, {level}. A level's reward fires every time it is
+# reached (there is no one-time lock).
+rewards:
+  enabled: true
+  list:
+    # Fires on EVERY level-up (1-100): a soft level-up sound (pitch 2, low
+    # volume), a short title and a chat line.
+    levelup:
+      levels: '1-100'
+      messages:
+        - '[sound] ENTITY_PLAYER_LEVELUP 2 0.6'
+        - '[title] &6&lLEVEL UP!<n>&7You reached level &e{level}'
+        - '[player] &aYou reached level &e{level}&a!'
+    # Big coin bonus at the milestone levels, plus a chat line.
+    milestone:
+      levels: '10, 25, 50, 100'
+      commands:
+        - '[console] tt coins add {player} 1000'
+      messages:
+        - '[player] &6&lMILESTONE! &7Level &e{level} &7reached: &6+1000 coins&7!'
+
+# ====================== Message translations ======================
+# & color codes. Variables in {braces}. The prefix is prepended where useful.
+messages:
+  prefix: '&6&lLevels &8»&r'
+  no-permission: '&cYou don''t have permission to do that.'
+  not-a-number: '&c{input} is not a valid whole number.'
+  player-not-found: '&cPlayer {player} was not found.'
+  disabled: '&cThe leveling system is currently disabled.'
+  only-players: '&cOnly players can use this without a target name.'
+  reloaded: '&aLeveling configuration reloaded.'
+  unknown-command: '&cUnknown argument &f{command}&c. Available arguments:'
+  max-level-reached: '&e{player} &ais already at the maximum level (&e{max}&a).'
+  added-exp: '&aAdded &e{amount}&a EXP to &e{player}&a. Now level &e{level}&a (&e{exp_formatted}&a/&e{required}&a).'
+  set-exp: '&aSet &e{player}&a''s EXP to &e{amount}&a. Now level &e{level}&a.'
+  removed-exp: '&aRemoved &e{amount}&a EXP from &e{player}&a. Now level &e{level}&a with &e{exp_formatted}&a EXP.'
+  added-levels: '&aAdded &e{amount}&a level(s) to &e{player}&a. Now level &e{level}&a.'
+  set-level: '&aSet &e{player}&a''s level to &e{amount}&a.'
+  removed-levels: '&aRemoved &e{amount}&a level(s) from &e{player}&a. Now level &e{level}&a.'
+  info:
+    - '&8&m----------&8<&6&l Levels &8>&8&m----------'
+    - '&7Player: &f{player}'
+    - '&7Level: &f{level}&7/&d{max}'
+    - '&7EXP: &f{exp_formatted}&7/&d{exp_required_formatted} &7[&f{percent}%&7]'
+    - '&7{progress_bar}'
+    - '&8&m-----------------------------------'
+  help:
+    - '&8&m----------&8<&6&l /leveling &8>&8&m----------'
+    - '&7/leveling info [player] &8- &fView level progress.'
+    - '&7/leveling addexp <amount> [player] &8- &fAdd EXP.'
+    - '&7/leveling setexp <amount> [player] &8- &fSet EXP.'
+    - '&7/leveling removeexp <amount> [player] &8- &fRemove EXP.'
+    - '&7/leveling addlevel <amount> [player] &8- &fAdd levels.'
+    - '&7/leveling setlevel <amount> [player] &8- &fSet level.'
+    - '&7/leveling removelevel <amount> [player] &8- &fRemove levels.'
+    - '&7/leveling reload &8- &fReload the config.'
+    - '&8&m-----------------------------------'

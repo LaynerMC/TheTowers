@@ -1,0 +1,198 @@
+# ==========================================================
+#  TheTowers - Placeholders, commands & permissions reference
+# ==========================================================
+# This file is a permanent, commented reference. It is shipped next to the
+# .yml files in the TheTowers folder and is NOT read by the plugin: edit it
+# freely to keep your own notes. Every line is a comment.
+#
+# Placeholders work in: the scoreboard lines/title (scoreboard.yml), the
+# action bar, the boss bar, the kit conditions (kits.yml), rewards.yml, and
+# anywhere PlaceholderAPI placeholders are accepted (chat, holograms, TAB...).
+#
+# & color codes are supported everywhere below unless noted.
+
+# ==========================================================
+#  1. INTERNAL placeholders (%thetowers_...%)
+# ==========================================================
+# These work EVEN WITHOUT PlaceholderAPI installed (the plugin resolves them
+# itself). They are also registered with PlaceholderAPI when it is present, so
+# external plugins can use them too.
+#
+#  --- Server / general ---
+#   %thetowers_date%              short date, dd/mm/yy
+#   %thetowers_date_long%         long date, "Nov 18, 2026"
+#   %thetowers_online%            server online player count
+#   %thetowers_ingame%            yes/no - is the player in a running game
+#
+#  --- Coins ---
+#   %thetowers_coins%             coin balance (Vault economy provided by TheTowers)
+#
+#  --- Career statistics (persisted in stats.yml / MySQL) ---
+#   %thetowers_kills%             total kills
+#   %thetowers_deaths%            total deaths
+#   %thetowers_wins%              games won
+#   %thetowers_losses%            games lost
+#   %thetowers_games%             games played
+#   %thetowers_points%            career points scored
+#   %thetowers_kd%                kill/death ratio (2 decimals)
+#   %thetowers_blocks_placed%     blocks placed in games
+#   %thetowers_blocks_broken%     blocks mined/broken in games
+#   %thetowers_max_kill_streak%   highest kill streak ever
+#   %thetowers_damage_dealt%      total damage dealt (half-hearts, 2 decimals)
+#   %thetowers_damage_taken%      total damage taken (2 decimals)
+#
+#  --- Current game (empty outside a game) ---
+#   %thetowers_arena%             arena name
+#   %thetowers_state%             arena state: WAITING / STARTING / RUNNING
+#   %thetowers_team%              the player's team name
+#   %thetowers_team_color%        team name colored with its color
+#   %thetowers_team_colorcode%    raw team color code (&c, &9, &e, &a)
+#   %thetowers_score%             the player's team score
+#   %thetowers_score_red%         a specific team's score (red/blue/yellow/green)
+#   %thetowers_goal%              points needed to win the arena
+#   %thetowers_time%              time left (M:SS)
+#   %thetowers_overtime%          yes/no - sudden death
+#   %thetowers_players%           players in the arena
+#   %thetowers_maxplayers%        arena max players
+#   %thetowers_game_kills%        player's kills THIS game
+#   %thetowers_game_deaths%       player's deaths THIS game
+#   %thetowers_game_points%       player's points THIS game
+#
+#  --- Kit ---
+#   %thetowers_kit%               chosen kit's display name
+#
+#  --- Leaderboards (top players) ---
+#   %thetowers_top_<stat>_<rank>_<period>%
+#     stat   = kills | wins | points | money
+#     rank   = 1 to 10
+#     period = alltime | weekly | monthly
+#     example: %thetowers_top_kills_1_alltime%
+#
+#  --- Leveling system (separate module, see leveling.yml) ---
+#   %thetowers_level%                      raw level number (e.g. 7)
+#   %thetowers_level_format%               matched range format (e.g. &8[&a7&2Ω&8])
+#   %thetowers_level_formatted%            level grouped (e.g. 7, or 1,340 for big levels)
+#   %thetowers_exp%                        raw current EXP
+#   %thetowers_exp_formatted%              EXP grouped (e.g. 1,340)
+#   %thetowers_exp_formatted_short%        EXP abbreviated (e.g. 1,3k)
+#   %thetowers_exp_required%               raw EXP needed for the next level
+#   %thetowers_exp_required_formatted%     required grouped (e.g. 3,500)
+#   %thetowers_exp_required_formatted_short%  required abbreviated (e.g. 3,5k)
+#   %thetowers_progress_bar%               progress bar (e.g. &8[&2====&7======&8])
+#   %thetowers_exp_progress_bar%           alias of %thetowers_progress_bar%
+#   %thetowers_progress_percent%           progress percentage (e.g. 50)
+#   %thetowers_exp_progress_percent%       alias
+#   %thetowers_exp_progress_percentage%    alias
+#   %thetowers_max_level%                  configured level cap
+
+# ==========================================================
+#  2. SCOREBOARD special lines (braces, scoreboard.yml only)
+# ==========================================================
+# Use alone on their line OR inline. Only meaningful where noted.
+#
+#   {teams}     in-game: one line per team (scoreboard.team_line)
+#   {timer}     in-game: time left (scoreboard.time_left) or sudden death
+#   {state}     prelobby: phase text (scoreboard-prelobby.state-waiting /
+#               state-starting), e.g. "&eWaiting..." / "&6Starting..."
+#   {team}      prelobby: the viewer's team (colored) or scoreboard-prelobby.no-team
+#   {players}   prelobby: current/max players of the arena
+#   {countdown} prelobby: seconds left (STARTING) or "waiting for players"
+#   {footer}    any scoreboard: the scoreboard.footer text (its own & colors)
+
+# ==========================================================
+#  3. EXTERNAL placeholders (need PlaceholderAPI + the expansion)
+# ==========================================================
+# TheTowers resolves its own placeholders (section 1) itself; the ones below
+# come from OTHER plugins through PlaceholderAPI. They work in the scoreboard
+# only if PlaceholderAPI is installed. Install the matching eCloud expansion.
+#
+#  --- Player (eCloud: Player) ---
+#   %player_name%                display name
+#   %player_ping%                latency in ms
+#   %player_uuid%                UUID
+#   %player_health%              current health
+#   %player_level%               vanilla XP level (used by kits.yml conditions)
+#
+#  --- LuckPerms (eCloud: LuckPerms) ---
+#   %luckperms_prefix%           primary prefix
+#   %luckperms_suffix%           primary suffix
+#   %luckperms_meta_<key>%       a meta value
+#
+#  --- Vault economy (eCloud: Vault) ---
+#   %vault_eco_balance%          raw balance
+#   %vault_eco_balance_formatted%  formatted balance
+#
+#  --- Server (eCloud: Server) ---
+#   %server_online%              online player count (internal %thetowers_online% also works)
+#   %server_max_players%         player cap
+#   %server_name%                server name
+#   %server_version%             Bukkit version
+#   %server_time_<pattern>%      formatted date, e.g. %server_time_MMM dd, yyyy%
+#   %server_tps%                 ticks per second
+
+# ==========================================================
+#  4. COMMANDS
+# ==========================================================
+#
+#  /tt  (aliases: /thetowers, /thetower) - main command.
+#    Players:
+#      /tt join <arena>                 join a game
+#      /tt randomjoin                   join the waiting arena with the most players
+#      /tt leave                        leave the game
+#      /tt list                         list arenas
+#      /tt stats [player]               show stats (menu)
+#      /tt top <stat> [all|week|month]  leaderboard (kills/wins/points/money)
+#      /tt kit [kit]                    choose your kit (works in the main lobby too)
+#      /tt kit buy <kit>                buy a kit with coins (Vault)
+#      /tt spectate <arena>             watch a running game
+#      /tt chat <team|all>              default chat scope (team or everyone)
+#    Admin (thetowers.admin):
+#      /tt reload                       reload config.yml, messages.yml, kits.yml,
+#                                       scoreboard.yml, rewards.yml, leveling.yml
+#      /tt edit [arena]                 setup menu (or /tt <arena>)
+#      /tt setlobby                     set the server main lobby
+#      /tt create <arena>               create an arena
+#      /tt delete <arena>               delete an arena
+#      /tt setarenalobby <arena>        set the waiting lobby
+#      /tt setspawn <arena> <team>      set a team base (at your position)
+#      /tt setpool <arena> <team>       set the score pool (2-click zone)
+#      /tt setspawnzone <arena> <team>  set the spawn zone (2-click zone)
+#      /tt setchestzone <arena> <team>  set the chest zone (2-click zone)
+#      /tt addgenerator <arena> ...     add a generator
+#      /tt cleargenerators <arena>      clear generators
+#      /tt coins add|remove|set|reset <player> [amount]  admin coins
+#
+#  /coins                                show your own coin balance.
+#
+#  /leveling  (aliases: /level, /lvl, /xp) - the separate leveling system.
+#    /leveling info [player]             view level progress (own; admins: any)
+#    /leveling addexp <amount> [player]  add EXP
+#    /leveling setexp <amount> [player]  set EXP
+#    /leveling removeexp <amount> [player]  remove EXP
+#    /leveling addlevel <amount> [player]   add levels
+#    /leveling setlevel <amount> [player]   set level
+#    /leveling removelevel <amount> [player]  remove levels
+#    /leveling reload                    reload leveling.yml
+#    (info is open to everyone; the rest require thetowers.admin)
+
+# ==========================================================
+#  5. PERMISSIONS
+# ==========================================================
+#
+#  thetowers.admin             access to every admin sub-command (and the
+#                              lobby inventory/build bypass)
+#  thetowers.join              join an arena (default: true)
+#  thetowers.spectate          spectate a running game (default: true)
+#  thetowers.arenamode.bypass  not auto-joined in arena mode
+#  thetowers.kits.all          unlock every kit, no condition (default: op)
+#  thetowers.kit.warrior       the Warrior kit (rank-reserved)
+#  thetowers.kit.champion      the Champion kit (rank-reserved)
+#  thetowers.join.vip          VIP join message (config.yml join-messages)
+#
+#  Old aliases (from the TheTower -> TheTowers rename) still grant the new
+#  permission through Bukkit children - nothing to re-assign:
+#    thetower.admin, thetower.join, thetower.arenamode.bypass,
+#    thetower.kits.all, thetower.kit.warrior
+#
+#  The leveling mutation commands (/leveling addexp, setlevel, reload...)
+#  are gated by thetowers.admin; /leveling info is open to everyone.

@@ -1,0 +1,311 @@
+# ==========================================================
+#  TheTowers - general configuration
+# ==========================================================
+
+# All player-facing messages live in messages.yml (next to this
+# file), in English. Edit that file and run /tt reload to change
+# any text.
+#
+# The scoreboards / boss bar / nametags / action bar are in
+# scoreboard.yml. The menus
+# (team, stats, spectator, setup, lobby item names) are in
+# menus.yml. The kit menu keeps its contents in kits.yml.
+
+# Main server lobby, where players are sent at the end of a game.
+# Set in game with /tt setlobby (do not edit by hand).
+server-lobby:
+  world: ''
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  yaw: 0.0
+  pitch: 0.0
+
+# Teleport players to the main lobby on join.
+# Set to false if the server does more than just TheTowers.
+lobby-on-join: true
+
+# Proxy compatibility (BungeeCord / Waterfall / Velocity). Taken into account at
+# startup (restart after changing these values).
+#   enabled: true    -> at the end of a game and on /tt leave, the player is sent
+#                       to the hub server below, instead of the local lobby.
+#   fallback-server  -> server name as declared in the proxy config
+#                       (bungeecord config.yml / velocity.toml).
+#
+# To do on the server side (not here), otherwise the stats will be wrong:
+#   - enable IP forwarding: spigot.yml "bungeecord: true", or Velocity's modern
+#     forwarding -> player UUIDs arrive correct.
+#   - for stats shared across the whole network, set storage.type: mysql.
+bungeecord:
+  enabled: false
+  fallback-server: lobby
+
+# Arena mode ("1 server = 1 game" network). When enabled: true, any player who
+# connects is dropped straight into the arena below, without /tt join. If a
+# game is already running there (or the arena is full), the player is sent to the hub
+# (requires bungeecord.enabled). Players with thetowers.arenamode.bypass
+# (op by default) are NOT auto-joined, so they can configure/observe.
+arena-mode:
+  enabled: false
+  arena: ''
+
+# Statistics storage (games, wins, losses, kills, deaths, points, the new
+# in-game stats AND the saved kit selection of each player) AND the coin
+# balances.
+#   type: local  -> stats.yml + coins.yml files, no dependency
+#                   (recommended for a single server)
+#   type: mysql  -> MySQL/MariaDB database (driver bundled in the jar), to share
+#                   stats and coins between several servers or with a website
+# The type change takes effect on restart.
+# With MySQL, the per-period counters (used by "/tt top <stat> day|week" and
+# the %thetowers_top_..._weekly/monthly% placeholders) are stored in a second
+# table named <table>_periodic, created automatically. The coin balances are
+# stored in a third table named <table>_coins.
+storage:
+  type: local
+  mysql:
+    host: localhost
+    port: 3306
+    database: thetowers
+    user: root
+    password: ''
+    table: thetowers_stats
+
+# Countdown duration before a game starts (seconds).
+countdown: 30
+
+# Points to score to win: DEFAULT value for new arenas (each one can change it
+# in the menu or with /tt setpoints).
+points-to-win: 10
+
+# Maximum game duration, in seconds: DEFAULT value for new arenas (menu or
+# /tt setduration, in minutes). When time runs out, the leading team wins; on a
+# tie, sudden death (the next point wins). 2400 = 40 minutes.
+game-duration: 2400
+
+# Minimum delay (seconds) between two points from the same player. Simple guard
+# against a double trigger: after a point, the player is sent back to base
+# anyway.
+mark-cooldown: 3
+
+# Seconds between the end of the game (summary, fireworks) and sending players
+# back to the lobby.
+end-delay: 10
+
+# Respawn protection: seconds during which a player who just spawned (game
+# start, return after a death) takes no damage. It stops as soon as they hit
+# someone. 0 = disabled.
+respawn-protection: 3
+
+# Mid-game reconnection. A player who disconnects (crash, network drop) keeps
+# their slot in their team and gets it back automatically on reconnect, with
+# their inventory and XP, and is teleported straight back into the running game.
+#   enabled : false = any disconnect permanently leaves the game
+#   timeout : seconds to come back; 0 = until the end of the game
+# A team whose every player is disconnected only forfeits at the end of this
+# delay. Anti-abuse: disconnecting less than 10 seconds after being hit by an
+# enemy counts as a death (items dropped, kill for the enemy), and you come back
+# with the starter kit.
+reconnection:
+  enabled: true
+  timeout: 180
+
+# Spectators: a player can watch a running game with /tt spectate <arena>,
+# without participating (no team, no stats). They fly, are invisible and can
+# touch nothing. Each arena must allow it (button in the edit menu, or
+# /tt spectators <arena> on): disabled by default, enable for event arenas.
+#   enabled       : false = no spectators anywhere
+#   max-per-arena : maximum spectators per arena
+#   stay-in-area  : true = a spectator cannot leave the arena's play area
+#                   (around the bases, pools and generators)
+# Permission: thetowers.spectate (given to everyone by default).
+# While spectating, the hotbar has an eye of ender ("Follow"): after picking a
+# player in the players menu, it makes the camera stick to them automatically.
+spectator:
+  enabled: true
+  max-per-arena: 5
+  stay-in-area: true
+
+# Game chat. EVERYTHING about the chat is set here: formats, tags and
+# switch messages. Two separate formats are supported: one for the lobby
+# (waiting / starting + outside any arena) and one for the in-game phase. Both
+# accept & color codes and any PlaceholderAPI placeholder (%player_name%,
+# %luckperms_prefix%, %vault_eco_balance%...). %message% is replaced with what
+# the player typed. Leave a format empty to use the server's default chat
+# format (no override) - the plugin still filters recipients and adds the team
+# tag. PlaceholderAPI placeholders only resolve if PlaceholderAPI is installed.
+#
+# During a game, a normal message is read only by the author's team; a message
+# starting with all-prefix is read by everyone. Before the start and on the end
+# screen, chat is arena-wide.
+#   enabled    : false = the plugin does not touch chat
+#   scope      : who "everyone" is for an all message
+#                  arena = the players and spectators of the game (in-game
+#                          players no longer receive hub chat, and vice versa)
+#                  world = the players in the author's world
+#   all-prefix : message prefix to talk to everyone
+#   lobby-format : chat format OUTSIDE any arena (the main server lobby set
+#                  with /tt setlobby, or anywhere out of a game). Empty = same
+#                  format as prelobby-format.
+#   prelobby-format / game-format : the other chat formats (prelobby-format is
+#                  the WAITING room of an arena, before the game starts)
+#   tag-team / tag-all / tag-spectator : the tag shown before each message.
+#                  Variables: %color% (team color), %team% (team name).
+#   mode-team / mode-all : confirmation shown by /tt chat. Variable: %prefix%
+#                  (the all-prefix).
+chat:
+  enabled: true
+  scope: arena
+  all-prefix: "!"
+  lobby-format: ""
+  prelobby-format: "%luckperms_prefix% &r%player_name% &8> &7%message%"
+  game-format: "%luckperms_prefix% &r%player_name% &8> &7%message%"
+  tag-team: "%color%[Team] &r"
+  tag-all: "&7[All] %color%[%team%] &r"
+  tag-spectator: "&8[Spectator] &r"
+  mode-team: "&aYour chat is your team chat. &7Start with %prefix% to talk to everyone."
+  mode-all: "&aYour chat is the everyone chat. &7Start with %prefix% to talk to your team."
+
+# Map regeneration: at the end of each game, the terrain modified during the
+# match (broken/placed blocks, explosions, fire, liquids) AND the content of
+# opened chests are restored to their original state. Set to false to leave the
+# map as is between two games.
+#
+# On a normal server stop (/stop) while games are running, every arena is
+# silently aborted: no winner announced, no rewards, no Discord message, and
+# the statistics counted during the unfinished games are rolled back. At the
+# next startup the maps are clean and every arena is WAITING again, as if the
+# games had never happened.
+map-regeneration: true
+
+# Equipment given at game start and on every respawn.
+#   team-armor : full leather armor dyed in the team's color, given in addition
+#                to the player's chosen kit.
+# The kits themselves (contents, unlock, default kit) are set in kits.yml. If an
+# arena forbids bows, bows and arrows are removed.
+kit:
+  team-armor: true
+
+# Lobby hotbar items (arena waiting room) AND main-lobby custom command items
+# are configured in lobby-items.yml (next to this file): materials, slots,
+# display names, lore and the commands the main-lobby items run.
+# The leave countdown (seconds) stays here.
+lobby-items:
+  leave-countdown: 5
+
+# ==========================================================
+#  Lobby world protection (all toggleable)
+# ==========================================================
+# Applies to the world of the server lobby (/tt setlobby). Every
+# protection below can be turned off independently.
+#   enabled                   : master switch (false = no protection at all).
+#   prevent-block-break       : no breaking blocks.
+#   prevent-block-place       : no placing blocks.
+#   prevent-interact-containers: no opening chests, furnaces, anvils,
+#                                crafting tables, doors, buttons, gates...
+#   void-teleport             : a player who falls to y <= 0 is sent back
+#                                to the lobby spawn.
+#   adventure-mode            : players are forced into ADVENTURE in the lobby.
+#   no-hunger                 : hunger stays full (no starvation).
+#   no-fall-damage            : fall damage cancelled.
+#   no-pvp                    : no damage between players.
+#   no-death-drops            : nothing drops on death (items + XP kept).
+lobby-protection:
+  enabled: true
+  prevent-block-break: true
+  prevent-block-place: true
+  prevent-interact-containers: true
+  void-teleport: true
+  adventure-mode: true
+  no-hunger: true
+  no-fall-damage: true
+  no-pvp: true
+  no-death-drops: true
+  # Freeze the lobby hotbar: clicks, shift-clicks, swaps and drags are
+  # cancelled in the pre-lobby AND the main lobby so the lobby items (kits,
+  # teams, leave...) cannot be moved. Players with thetowers.admin bypass this
+  # freeze (they keep full inventory access in the lobby). When false, everyone
+  # can rearrange their inventory in the lobby.
+  inventory-protection: true
+
+# ==========================================================
+#  Join messages (main lobby only)
+# ==========================================================
+# Shown when a player enters the lobby world: server join, coming back
+# from a game, or changing into the lobby world. NOT the game/prelobby
+# join messages (those are separate). Both lines support PlaceholderAPI
+# (%player_name%, %luckperms_prefix%, ...) - the texts are in messages.yml.
+#   default-enabled : send the default join message to everyone.
+#   vip-enabled     : send the VIP join message instead to players who
+#                     have the vip-permission.
+#   vip-permission  : permission that triggers the VIP message.
+join-messages:
+  default-enabled: false
+  vip-enabled: true
+  vip-permission: "thetowers.join.vip"
+
+# ==========================================================
+#  Stone pressure plate -> command (lobby)
+# ==========================================================
+# When a player steps on a STONE pressure plate in the lobby world, the
+# command below is run. Prefix with "console:" to run as the console
+# (%player% = the player's name); otherwise as the player. 3-second
+# cooldown per player to avoid spam.
+lobby-pressure-plate:
+  enabled: true
+  command: "tt randomjoin"
+
+# Resource generators: each type is then placed in arenas (menu > Generators, or
+# /tt addgenerator <arena> <type>).
+#   material      : item produced (modern or pre-1.13 name)
+#   amount        : quantity per spawn (default 1)
+#   interval      : interval between two spawns, in TICKS (20 = 1 second)
+#   max-on-ground : items on the ground at most for this generator; beyond that,
+#                   the oldest disappear (avoids huge piles)
+# Default values: iron every 3s, XP bottle every 1.5s, diamond every 40s.
+generators:
+  iron:
+    material: IRON_INGOT
+    interval: 60
+    max-on-ground: 1
+  xp:
+    material: EXPERIENCE_BOTTLE
+    interval: 30
+    max-on-ground: 1
+  diamond:
+    material: DIAMOND
+    interval: 800
+    max-on-ground: 1
+
+# ==========================================================
+#  Leaderboards (tops)
+# ==========================================================
+# The %thetowers_top_<stat>_<rank>_<period>% placeholders
+# (kills, wins, points, money) are refreshed from the storage every
+# "refresh-seconds" seconds. Each list holds the first 10 players.
+# The output format of each top is editable in messages.yml
+# (lobby.top_kills, lobby.top_wins, lobby.top_points, lobby.top_money).
+#   refresh-seconds : how often the caches are rebuilt (5 minimum).
+#   cache-size      : how many players per category are kept (10 max).
+tops:
+  refresh-seconds: 30
+  cache-size: 10
+
+# ==========================================================
+#  Coins (Vault economy provided by TheTowers)
+# ==========================================================
+# TheTowers registers itself as a Vault Economy provider, so any
+# plugin that uses Vault (%vault_eco_balance%, shop plugins, ...)
+# reads and writes TheTowers coins. Balances are INTEGERS and are
+# stored with the player's stats (stats.yml locally, or the stats
+# table with MySQL): there is no separate coins.yml.
+# See /tt coins add|remove|set|reset and the user command /coins.
+#   starting-balance : balance given to a brand-new player (integer).
+#   max-balance      : cap a player can reach (deposits beyond it are
+#                      clamped). 1000000 = "1M" in the abbreviation.
+#   currency-singular / plural : names reported to Vault.
+coins:
+  starting-balance: 0
+  max-balance: 1000000
+  currency-singular: "Coin"
+  currency-plural: "Coins"

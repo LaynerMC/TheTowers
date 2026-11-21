@@ -1,0 +1,169 @@
+# ==========================================================
+#  TheTowers - scoreboard / HUD configuration
+# ==========================================================
+# Everything about the side scoreboards, the boss bar, the nametags and the
+# action bar lives here. Edit this file and run /tt reload to apply.
+#
+# Three side scoreboards (Hypixel-style):
+#   scoreboard          : the IN-GAME scoreboard (running game).
+#   scoreboard-prelobby : the WAITING ROOM scoreboard (arena WAITING /
+#                         STARTING countdown).
+#   scoreboard-lobby    : the MAIN server lobby scoreboard (/tt setlobby,
+#                         or anywhere outside a game).
+#
+# In a line (and in the title):
+#   - TheTowers placeholders, working EVEN WITHOUT PlaceholderAPI:
+#       %thetowers_date_long%   long date "Nov 18, 2026"
+#       %thetowers_date%        short date dd/mm/yy
+#       %thetowers_online%      server online player count
+#       %thetowers_coins%       coin balance (Vault)
+#       %thetowers_kit%         chosen kit
+#       --- career stats ---
+#       %thetowers_kills% %thetowers_deaths% %thetowers_wins% %thetowers_losses%
+#       %thetowers_games% %thetowers_points% %thetowers_kd%
+#       %thetowers_blocks_placed% %thetowers_blocks_broken%
+#       %thetowers_max_kill_streak% %thetowers_damage_dealt% %thetowers_damage_taken%
+#       --- current game ---
+#       %thetowers_arena% %thetowers_state% %thetowers_team% %thetowers_team_color%
+#       %thetowers_score% %thetowers_score_<team>% %thetowers_goal% %thetowers_time%
+#       %thetowers_players% %thetowers_maxplayers%
+#       %thetowers_game_kills% %thetowers_game_deaths% %thetowers_game_points%
+#       --- leveling (separate module) ---
+#       %thetowers_level% %thetowers_level_format% %thetowers_level_formatted%
+#       %thetowers_exp% %thetowers_exp_formatted% %thetowers_exp_formatted_short%
+#       %thetowers_exp_required% %thetowers_exp_required_formatted% %thetowers_exp_required_formatted_short%
+#       %thetowers_progress_bar% / %thetowers_exp_progress_bar%
+#       %thetowers_progress_percent% / %thetowers_exp_progress_percentage%
+#       %thetowers_max_level%
+#       --- leaderboards ---
+#       %thetowers_top_<kills|wins|points|money>_<1-10>_<alltime|weekly|monthly>%
+#   - Placeholders from ANY other plugin, if PlaceholderAPI is installed:
+#       %player_name%, %luckperms_prefix%, %player_ping%, %server_online%...
+#   - Special lines, alone on their line OR inline:
+#       {teams}    one line per team (in-game), formatted by scoreboard.team_line
+#       {timer}    time left (scoreboard.time_left) or sudden death (scoreboard.overtime)
+#       {state}    prelobby state (scoreboard-prelobby.state-waiting / state-starting)
+#       {team}     the viewer's team (colored), or scoreboard-prelobby.no-team
+#       {players}  current/max players of the arena (prelobby)
+#       {countdown} seconds left (STARTING) or scoreboard-prelobby.waiting
+#       {footer}   the scoreboard.footer text below (its own & colors, no format wrapper)
+#
+# Line length: 32 characters (color codes included) in 1.8-1.12, 128 from 1.13.
+
+# ==========================================================
+#  Footer (inline in each scoreboard below)
+# ==========================================================
+# The footer line is written directly in each scoreboard's "lines" (centered
+# manually with leading spaces, like the date line). There is no separate
+# "footer:" section anymore.
+
+# ==========================================================
+#  In-game side scoreboard
+# ==========================================================
+scoreboard:
+  enabled: true
+  title: "&e&lTHE TOWERS"
+  time_left: "&fTime left: &a%time%"
+  overtime: "&c&lSudden death!"
+  team_line: "%color%%letter% &f%team% &a%score%&7/%goal%%you%"
+  you_suffix: " &eYOU"
+  lines:
+    - "&7         %thetowers_date_long%"
+    - "&f"
+    - "{timer}"
+    - "&fGoal: &e%thetowers_goal% pts"
+    - "&f"
+    - "{teams}"
+    - "&f"
+    - "&fKills: &a%thetowers_game_kills%"
+    - "&fDeaths: &c%thetowers_game_deaths%"
+    - "&fPoints: &a%thetowers_game_points%"
+    - "&f"
+    - "&6    &nplay.yourserver.net&r"
+
+# ==========================================================
+#  Pre-game lobby scoreboard
+# ==========================================================
+# Shown while the arena is WAITING or STARTING (countdown). The countdown
+# itself is NOT shown here: it plays through the title, the chat and the
+# Minecraft XP bar (see Countdown). {state} reflects the phase.
+scoreboard-prelobby:
+  enabled: true
+  title: "&e&lTHE TOWERS"
+  state-waiting: "&eWaiting..."
+  state-starting: "&6Starting..."
+  no-team: "&7None"
+  countdown: "&fStarts in &e%time%"
+  waiting: "&7Waiting for players..."
+  lines:
+    - "&7         %thetowers_date_long%"
+    - "&f"
+    - "&fStatus: {state}"
+    - "&f"
+    - "&fYour team: {team}"
+    - "&f"
+    - "&7Choose your team"
+    - "&7through the item"
+    - "&7in your inventory!"
+    - "&f"
+    - "&fMap: &a{map}"
+    - "&fPlayers: &a{players}"
+    - "&f"
+    - "&6    &nplay.yourserver.net&r"
+
+# ==========================================================
+#  Main server lobby scoreboard
+# ==========================================================
+# Shown to every player who is in NO arena. Includes the leveling info.
+# %luckperms_prefix% and %player_ping% need PlaceholderAPI + the LuckPerms /
+# Player eCloud expansions; everything else is internal and works as is.
+scoreboard-lobby:
+  enabled: true
+  title: "&e&lTHE TOWERS"
+  lines:
+    - "&7         %thetowers_date_long%"
+    - "&f"
+    - "&fRank: %luckperms_prefix%"
+    - "&fCoins: &6%thetowers_coins%"
+    - "&f"
+    - "&fLevel: %thetowers_level_format%"
+    - "&f"
+    - "&fProgress: &b%thetowers_exp_formatted_short%&7/&a%thetowers_exp_required_formatted_short%"
+    - "%thetowers_exp_progress_bar% %thetowers_exp_progress_percentage%"
+    - "&f"
+    - "&fYour ping: &a%player_ping%ms"
+    - "&fOnline: &a%thetowers_online%"
+    - "&f"
+    - "&6    &nplay.yourserver.net&r"
+
+# ==========================================================
+#  Nametags (above the heads)
+# ==========================================================
+# Team colors above the heads (nametags), not only in the TAB list:
+# each team gets a scoreboard team whose prefix is its color, applied to its
+# players on the server's main scoreboard.
+nametags:
+  enabled: true
+
+# ==========================================================
+#  Boss bar
+# ==========================================================
+# Above the hotbar during a game: the score of every team, the bar tracking
+# the leading team. In sudden death, the text switches to "sudden-death".
+# Requires a 1.9+ SERVER (on 1.8 it never shows). Also shown to spectators.
+bossbar:
+  enabled: true
+  color: RED          # BarColor: RED, BLUE, GREEN, YELLOW, PURPLE, WHITE, PINK
+  style: SOLID        # BarStyle: SOLID, SEGMENTED_6, SEGMENTED_10, ...
+  separator: " &8- "  # between two teams in the title
+  sudden-death: "&c&lSudden death &7- the next point wins!"
+
+# ==========================================================
+#  Action bar (the small text above the hotbar)
+# ==========================================================
+# Shown once per second to every player and spectator of a running game.
+# Same placeholders as the scoreboard. Leave "format" empty to disable.
+actionbar:
+  enabled: true
+  format: "&7Ends in &f%thetowers_time%"
+  format-sudden-death: "&c&lSudden death &7- the next point wins!"

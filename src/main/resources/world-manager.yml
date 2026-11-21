@@ -1,0 +1,49 @@
+# ============================================================
+#  TheTowers - World Manager module (single configuration file)
+# ============================================================
+#  EVERYTHING related to the world-manager module lives in this one
+#  file:
+#    config    : module options
+#    messages  : translation lines (used by the /bmv commands)
+#    worlds    : the loaded worlds with their saved options
+#
+#  The module is fully standalone within TheTowers: the towers GAME
+#  never calls into it. It is managed only through its own /bmv
+#  commands (create / load / unload / teleport / info / list / set /
+#  flags). Edit this file, then run "/bmv reload" (or restart) to apply.
+# ============================================================
+
+# ---------------------------- config ----------------------------
+config:
+  # World names that the module refuses to create or load - server
+  # folders that must never be touched through /bmv.
+  world_disable_name: [logs, plugins, plugin, bStats, PluginMetrics]
+
+# --------------------------- messages ---------------------------
+# Translation lines used by the /bmv commands. & color codes supported.
+# Placeholders are written as %name% and filled by the module.
+messages:
+  world_startup_loading: "&e[WorldManager] &aStart the creation and loading of the world: &2%name%"
+  no_world_target: "&e[WorldManager] &cYou didn't target any world or world name. &e/bmv help"
+  no_player_target: "&e[WorldManager] &cThe target player don't exist or is not connected. &e/bmv help"
+  world_already_exist: "&e[WorldManager] &cA world with this name already exist"
+  world_not_found: "&e[WorldManager] &cThe world &e%name% is not found. &e/bmv list"
+  flag_not_found: "&e[WorldManager] &cThe flag %name% don't exist. &e/bmv flags"
+  forbidden_world_name: "&e[WorldManager] &cYou can't create a world with this name, check your world-manager.yml."
+  cmd_load_success: "&e[WorldManager] &aworld: &2%name% &aloaded."
+  cmd_teleport: "&e[WorldManager] &aYou was teleported to the world: &2%name%."
+  cmd_teleport_success: "&e[WorldManager] &aThe player %player% was teleported to the world: &2%name%."
+  cmd_unload_success: "&e[WorldManager] &aThe world: &2%name% is unload."
+  error_set_option: "&e[WorldManager] &cImpossible to set this option."
+  error_world_creator: "&e[WorldManager] &cThis option does not support WorldCreator."
+  infos_pattern: "&e%name% &8| &7%value%"
+  help_pattern: "&e%usage% &8| &7%description%"
+  flags_pattern: "&e%usage% &8| &7%description%"
+  only_ingame_command: "&e[WorldManager] &cThis command can be executed only in-game."
+  no_permission: "&e[WorldManager] &cYou don't have the permission to do that"
+
+# ---------------------------- worlds ----------------------------
+# Managed automatically by the module (create / load / unload). Each
+# entry stores a world's saved options. You usually do NOT need to
+# edit this by hand: the first loaded world is added on first startup.
+worlds:

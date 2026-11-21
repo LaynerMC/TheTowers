@@ -1,0 +1,47 @@
+# ==========================================================
+#  TheTowers - arenas
+# ==========================================================
+# This file is generated and rewritten by the plugin.
+# Do not edit it while the server is running.
+#
+# Easiest: /tt (no argument) opens the setup menu.
+#
+# Or with commands, in game:
+#   /tt create <name>
+#   /tt setarenalobby <name>            (stand where you want the waiting lobby)
+#   /tt setspawn <name> Red             (stand at the team base; same for Blue...)
+#   /tt setpool <name> Red              (then right click 2 opposite corners of the pool)
+#   /tt setspawnzone <name> Red         (optional: no-build zone)
+#   /tt setchestzone <name> Red         (optional: chests reserved for the team)
+#   /tt addgenerator <name> iron        (at your position; types in config.yml)
+#   /tt setteams <name> 2               (2 to 4 teams)
+#   /tt setplayersperteam <name> 4
+#   /tt setminplayers <name> 2
+#   /tt setmaxplayers <name> 8
+#   /tt setpoints <name> 10             (points to win)
+#   /tt setduration <name> 40            (max duration, in minutes)
+#   /tt save <name>                     (validates and confirms the arena)
+#
+# Structure generated for each arena:
+#
+# arenas:
+#   tower1:
+#     name: tower1
+#     minPlayers: 2
+#     maxPlayers: 8
+#     teamCount: 2
+#     playersPerTeam: 4
+#     points: 10
+#     duration: 2400
+#     allowBows: true
+#     lobby: { world: world, x: 0.0, y: 64.0, z: 0.0, yaw: 0.0, pitch: 0.0 }
+#     teams:
+#       Red:
+#         spawn: { world: world, x: 50.0, y: 70.0, z: 0.0, yaw: 90.0, pitch: 0.0 }
+#         pool: { world: world, x1: 48, y1: 90, z1: -2, x2: 52, y2: 91, z2: 2 }
+#         spawnZone: { world: world, x1: 45, y1: 65, z1: -5, x2: 55, y2: 75, z2: 5 }
+#         chestZone: { world: world, x1: 45, y1: 65, z1: -5, x2: 55, y2: 75, z2: 5 }
+#     generators:
+#       0: { type: iron, world: world, x: 0.5, y: 65.0, z: 0.5, yaw: 0.0, pitch: 0.0 }
+
+arenas: {}

@@ -1,0 +1,94 @@
+# ==========================================================
+#  TheTowers - lobby items configuration
+# ==========================================================
+# Two sections:
+#
+#  arena-lobby : the 3 hotbar items given to players in an arena's
+#                WAITING room (before a game starts).
+#                  kits  : opens the kit selection menu (right click).
+#                  team  : opens the team selection menu (right click).
+#                          A fixed enchanted book (with the glint) - only
+#                          the slot, name and lore are editable.
+#                  leave : leaves the arena (right click, with a
+#                          countdown whose length is in config.yml,
+#                          lobby-items.leave-countdown).
+#                Each item: material (modern or pre-1.13 name), slot
+#                (0-8), name (& colors) and lore (list of lines).
+#
+#  main-lobby  : custom hotbar items given to players who are in NO
+#                arena (the main server lobby, or anywhere outside a
+#                game). Each item is keyed by its slot (0-8) and has a
+#                material, name, lore and a list of commands run on
+#                right OR left click. A command prefixed with
+#                "console:" runs as the console; otherwise it runs as
+#                the player (with their permissions). PlaceholderAPI
+#                placeholders are replaced in name, lore and commands.
+#                Use "%player%" for the player's name in console commands.
+#
+# Edit this file and run /tt reload to apply. An unknown material on
+# this version falls back to a default (with a console warning).
+
+# ================= Arena waiting-lobby items =================
+arena-lobby:
+  kits:
+    material: EMERALD
+    slot: 0
+    name: "&bKits"
+    lore:
+      - "&7Right click to choose your kit"
+  # The team selector is a fixed enchanted book (with the glint); only its
+  # slot, name and lore are editable here - the material is set in code.
+  team:
+    slot: 4
+    name: "&aTeam Selector"
+    lore:
+      - "&7Right click to pick a team"
+  leave:
+    material: BARRIER
+    slot: 8
+    name: "&cLeave"
+    lore:
+      - "&7Right click to leave the arena"
+
+# ================= Main server-lobby items =================
+# Items given to players who are NOT in any arena. Each key is the
+# hotbar slot (0-8). Right OR left click runs the commands.
+main-lobby:
+  0:
+    material: GOLD_AXE
+    name: "&ePlay"
+    lore:
+      - "&7Click to join a game"
+    commands:
+      - "tt randomjoin"
+  1:
+    material: EMERALD
+    name: "&bKits"
+    lore:
+      - "&7Choose your kit"
+    commands:
+      - "tt kit"
+  7:
+    material: GOLD_NUGGET
+    name: "&6Coins"
+    lore:
+      - "&7Your balance: &f%thetowers_coins%"
+      - "&7Click to check it"
+    commands:
+      - "coins"
+  8:
+    material: REDSTONE_COMPARATOR
+    name: "&fSettings"
+    lore:
+      - "&7Open the settings menu"
+    commands:
+      - "settings"
+
+# ================= Spectator hotbar items (display names) =================
+# Names of the items given to spectators (compass = players menu, barrier =
+# leave). The slots are fixed (0 and 8).
+spectator-items:
+  players-name: "&6Players"
+  leave-name: "&cLeave"
+  right-click: "&7(Right click)"
+
