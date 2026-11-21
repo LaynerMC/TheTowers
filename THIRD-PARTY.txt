@@ -1,0 +1,20 @@
+THIRD-PARTY NOTICES
+TheTowers 1.9.10 fork / server setup
+Prepared: 2026-11-20
+
+1. THE TOWERS — ORIGINAL PROJECT
+Project: The Towers (Minecraft minigame)
+Original author attribution found in the supplied original project's plugin.yml: xLaugh
+Original source archive: The-Towers-main
+License: GNU General Public License, version 3 (GPL-3.0)
+License text: see LICENSE-GPL-3.0.txt
+Project/resource: https://www.spigotmc.org/resources/the-towers-1-8-26-3.138988/
+
+
+2. BULMULTIVERSE — CODE INCORPORATED INTO THE FORK
+Project: BulMultiverse
+Copyright notice in supplied LICENSE: Copyright (c) 2024 Ali YAGMUR
+License: MIT
+License text: see LICENSE-MIT-BulMultiverse.txt
+Source project: https://github.com/BulPlugins/BulMultiverse
+Resource: https://www.spigotmc.org/resources/bulmultiverse-ultra-light-and-optimized-world-manager-stable.118884/

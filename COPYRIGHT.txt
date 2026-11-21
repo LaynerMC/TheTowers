@@ -1,0 +1,44 @@
+COPYRIGHT AND MODIFICATION NOTICE
+Product: TheTowers 1.9.10 fork / server setup
+Prepared: 2026-11-20
+
+This distribution contains a modified version of The Towers, originally attributed
+to xLaugh in the supplied original source archive. The original project is provided
+under GNU GPL version 3. Its original copyright and license notices are retained
+in this distribution.
+
+The distribution also incorporates code from BulMultiverse. The supplied upstream
+MIT license identifies Copyright (c) 2024 Ali YAGMUR. The complete MIT notice is
+included in LICENSE-MIT-BulMultiverse.txt.
+
+Modifications in this fork:
+- Additional and modified gameplay/plugin functionality.
+- Modified configuration, messages, scoreboards, and related integration.
+- Additional leveling functionality.
+- Additional party system functionality.
+- Additional leaderboards (tops) functionality.
+
+
+Fork maintainer / distributor: LaynerMC
+Modification dates:
+
+11/17/2026 - Merged BulMultiverse in the code to reduce plugins list.
+
+11/17/2026 - Edited the way the plugin saves players stats and information.
+Removed tab management system. Removed simple quests system. Removed French code and export everything to english.
+Added more placeholders for internal use and external with PlaceholderAPI. Added more stats to the stats system.
+
+11/18/2026 - Added more customization to messages, scoreboard, etc.
+Re-organization of .yml files and structure inside. Added built-in economy system with vault support.
+Rework on Kits system now with custom commands and requirements (internal: wins, kills, score, etc.)
+
+11/19/2026 - Added leveling system with rewards per level, custom format and built-in kits support
+for kits requirements. Rework on scoreboard system for Lobby and PreGame support.
+
+11/20/2026 - Added Party system from scratch. Added leaderboards system with alltime, weekly and monthly support.
+
+
+
+Do not remove or alter upstream copyright notices. Add your own copyright notice
+only for original contributions you actually authored and are entitled to license.
+This notice does not claim ownership of upstream code.
